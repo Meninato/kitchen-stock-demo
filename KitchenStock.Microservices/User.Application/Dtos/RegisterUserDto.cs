@@ -1,3 +1,5 @@
-﻿namespace User.Application.Dtos;
+﻿using User.Domain.Enums;
 
-public record RegisterUserDto(string Name, string Email, string Password);
+namespace User.Application.Dtos;
+
+public record RegisterUserDto(string Name, string Email, string Password, UserPlan UserPlan = UserPlan.Basic);

@@ -1,0 +1,51 @@
+services:
+
+  postgres:
+    image: postgres:16
+    container_name: kitchen-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: devuser
+      POSTGRES_PASSWORD: devpass
+      POSTGRES_DB: devdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - kitchen-stock
+
+  vault:
+    image: vault:1.13.3
+    container_name: kitchen-vault
+    ports:
+      - "8200:8200"
+    environment:
+      VAULT_ADDR: http://0.0.0.0:8200
+      VAULT_LOCAL_CONFIG: |
+        storage "file" {
+          path = "/vault/data"
+        }
+        listener "tcp" {
+          address     = "0.0.0.0:8200"
+          tls_disable = 1
+        }
+        ui = true
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - vault-data:/vault/data
+      - vault-logs:/vault/logs
+      - ./vault-config:/vault/config
+    networks:
+      - kitchen-stock
+    command: vault server -config=/vault/config
+
+volumes:
+  pgdata:
+  vault-data:
+  vault-logs:
+
+networks:
+  kitchen-stock:
+    driver: bridge

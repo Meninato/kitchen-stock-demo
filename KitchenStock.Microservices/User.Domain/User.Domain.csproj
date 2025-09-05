@@ -10,8 +10,4 @@
     <ProjectReference Include="..\Shared.Common\Shared.Common.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="ValueObjects\" />
-  </ItemGroup>
-
 </Project>

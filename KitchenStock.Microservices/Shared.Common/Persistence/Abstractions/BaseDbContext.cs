@@ -10,6 +10,7 @@ public abstract class BaseDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         ApplyBaseConfiguration(modelBuilder);
+        base.OnModelCreating(modelBuilder);
     }
 
     public override int SaveChanges()

@@ -1,12 +1,9 @@
 ﻿using MediatR;
-using User.Application.Dtos;
 using User.Application.Results;
 
 namespace User.Application.Commands;
 
-public record RegisterUserCommand(
-    string Name,
+public record LoginUserCommand(
     string Email,
     string Password
-) : IRequest<UserResult>;
-
+) : IRequest<AuthResult>;

@@ -7,10 +7,10 @@ namespace KitchenStock.Infrastructure.Repositories;
 
 public class EfCoreGenericRepository<T> : IGenericRepository<T> where T : BaseEntity
 {
-    protected readonly BaseDbContext _context;
+    protected readonly KitchenStockDbContext _context;
     protected readonly DbSet<T> _dbSet;
 
-    public EfCoreGenericRepository(BaseDbContext context)
+    public EfCoreGenericRepository(KitchenStockDbContext context)
     {
         _context = context;
         _dbSet = context.Set<T>();

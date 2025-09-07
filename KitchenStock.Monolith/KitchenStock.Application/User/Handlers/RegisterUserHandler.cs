@@ -6,7 +6,7 @@ using KitchenStock.Application.User.Commands;
 
 namespace KitchenStock.Application.User.Handlers;
 
-public class RegisterUserHandler : IRequestHandler<RegisterUserCommand, UserResult>
+public class RegisterUserHandler : IRequestHandler<RegisterUserCommand, KitchenResult>
 {
     private readonly IUserService _userService;
 
@@ -15,7 +15,7 @@ public class RegisterUserHandler : IRequestHandler<RegisterUserCommand, UserResu
         _userService = userService;
     }
 
-    public async Task<UserResult> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
+    public async Task<KitchenResult> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
     {
         return await _userService.RegisterAsync(MapToDto(request));
     }

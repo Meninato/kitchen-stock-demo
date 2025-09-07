@@ -1,7 +1,9 @@
-﻿namespace KitchenStock.Application.Abstractions;
+﻿using KitchenStock.Application.Auth.Dtos;
+using KitchenStock.Application.Auth.Results;
+
+namespace KitchenStock.Application.Abstractions;
 
 public interface IAuthService
 {
-    Task<string> GenerateTokenAsync(User user);
-    Task<User?> AuthenticateAsync(string email, string password);
+    Task<AuthResult> AuthenticateAsync(string email, string password);
 }

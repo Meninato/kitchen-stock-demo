@@ -11,12 +11,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Auth\" />
+    <PackageReference Include="FluentResults" Version="4.0.0" />
+    <PackageReference Include="MediatR" Version="13.0.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="FluentResults" Version="4.0.0" />
-    <PackageReference Include="MediatR" Version="13.0.0" />
+    <Folder Include="Ingredient\Dto\" />
+    <Folder Include="Kitchen\Queries\" />
   </ItemGroup>
 
 </Project>

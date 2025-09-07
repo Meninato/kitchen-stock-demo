@@ -2,7 +2,7 @@
 using System.Text;
 using System.Text.Json;
 
-namespace KitchenStock.Infrastructure.Services;
+namespace KitchenStock.Infrastructure.Services.Vault;
 
 public class VaultService : IVaultService
 {

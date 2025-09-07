@@ -1,0 +1,270 @@
+﻿using FluentResults;
+using KitchenStock.Application.Abstractions;
+using KitchenStock.Application.Errors;
+using KitchenStock.Application.Kitchen.Dtos;
+using KitchenStock.Application.Kitchen.Results;
+using KitchenStock.Domain.Entities;
+using KitchenStock.Domain.Enums;
+
+namespace KitchenStock.Infrastructure.Services;
+
+public class KitchenService : IKitchenService
+{
+    private readonly IKitchenRepository _kitchenRepository;
+    private readonly IUserRepository _userRepository;
+
+    public KitchenService(IKitchenRepository kitchenRepository, IUserRepository userRepository)
+    {
+        _kitchenRepository = kitchenRepository;
+        _userRepository = userRepository;
+    }
+
+    public async Task<KitchenResult> CreateKitchenAsync(CreateKitchenDto request)
+    {
+        try
+        {
+            var validationResult = ValidateCreateKitchenRequest(request);
+            if (validationResult.IsFailed)
+                return KitchenResult.Failure(validationResult.Errors);
+
+            var user = await _userRepository.GetByIdAsync(request.UserId);
+            if (user == null)
+                return KitchenResult.Failure(UserErrors.UserNotFound(request.UserId));
+
+            //TODO: Check somewhere max allowed kitchens based on plan
+            var currentKitchenCount = await _kitchenRepository.CountByUserIdAsync(request.UserId);
+            if (currentKitchenCount >= 5)
+                return KitchenResult.Failure(KitchenErrors.BusinessRules.MaxKitchensReached(5, currentKitchenCount));
+
+            var existingKitchens = await _kitchenRepository.GetByUserIdAsync(request.UserId);
+            if (existingKitchens.Any(k => k.Name.Equals(request.Name.Trim(), StringComparison.OrdinalIgnoreCase)))
+                return KitchenResult.Failure(KitchenErrors.BusinessRules.KitchenNameAlreadyExists(request.Name, request.UserId));
+
+            if (user.Plan == UserPlan.Basic && currentKitchenCount >= 1)
+                return KitchenResult.Failure(KitchenErrors.BusinessRules.UserPlanDoesNotAllowMultipleKitchens(user.Plan.ToString()));
+
+            var kitchen = new KitchenEntity
+            {
+                Name = request.Name.Trim(),
+                Description = request.Description?.Trim() ?? string.Empty,
+                OwnerId = request.UserId
+            };
+
+            var createdKitchen = await _kitchenRepository.CreateAsync(kitchen);
+            var response = MapToDto(createdKitchen);
+
+            return KitchenResult.Success(response);
+        }
+        catch (Exception ex)
+        {
+            return KitchenResult.Failure(KitchenErrors.UnexpectedError("kitchen creation", ex));
+        }
+    }
+
+    public async Task<KitchenResult> GetKitchenByIdAsync(Guid id, Guid userId)
+    {
+        try
+        {
+            var kitchen = await _kitchenRepository.GetByIdWithDetailsAsync(id);
+            if (kitchen == null)
+                return KitchenResult.Failure(KitchenErrors.Authorization.NotFound(id));
+
+            // Verificar autorização
+            if (kitchen.OwnerId != userId)
+                return KitchenResult.Failure(KitchenErrors.Authorization.AccessDenied(id, userId));
+
+            var response = MapToDto(kitchen);
+            return KitchenResult.Success(response);
+        }
+        catch (Exception ex)
+        {
+            return KitchenResult.Failure(KitchenErrors.UnexpectedError("get kitchen by id", ex));
+        }
+    }
+
+    public async Task<KitchenListResult> GetUserKitchensAsync(Guid userId)
+    {
+        try
+        {
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null)
+                return KitchenListResult.Failure(UserErrors.UserNotFound(userId));
+
+            var kitchens = await _kitchenRepository.GetByUserIdAsync(userId);
+            var responses = new List<KitchenResponseDto>();
+
+            foreach (var kitchen in kitchens)
+            {
+                responses.Add(MapToDto(kitchen));
+            }
+
+            return KitchenListResult.Success(responses);
+        }
+        catch (Exception ex)
+        {
+            return KitchenListResult.Failure(KitchenErrors.UnexpectedError("get user kitchens", ex));
+        }
+    }
+
+    public async Task<KitchenResult> UpdateKitchenAsync(UpdateKitchenDto request)
+    {
+        try
+        {
+            var validationResult = ValidateUpdateKitchenRequest(request);
+            if (validationResult.IsFailed)
+                return KitchenResult.Failure(validationResult.Errors);
+
+            var kitchen = await _kitchenRepository.GetByIdAsync(request.KitchenId);
+            if (kitchen == null)
+                return KitchenResult.Failure(KitchenErrors.Authorization.NotFound(request.KitchenId));
+
+            if (kitchen.OwnerId != request.UserId)
+                return KitchenResult.Failure(KitchenErrors.Authorization.AccessDenied(request.KitchenId, request.UserId));
+
+            var existingKitchens = await _kitchenRepository.GetByUserIdAsync(request.UserId);
+            if (existingKitchens.Any(k => k.Id != request.KitchenId && k.Name.Equals(request.Name.Trim(), StringComparison.OrdinalIgnoreCase)))
+                return KitchenResult.Failure(KitchenErrors.BusinessRules.KitchenNameAlreadyExists(request.Name, request.UserId));
+
+            kitchen.Name = request.Name.Trim();
+            kitchen.Description = request.Description?.Trim() ?? string.Empty;
+
+            var updatedKitchen = await _kitchenRepository.UpdateAsync(kitchen);
+            var response = MapToDto(updatedKitchen);
+
+            return KitchenResult.Success(response);
+        }
+        catch (Exception ex)
+        {
+            return KitchenResult.Failure(KitchenErrors.UnexpectedError("kitchen update", ex));
+        }
+    }
+
+    public async Task<KitchenResult> DeleteKitchenAsync(Guid id, Guid userId)
+    {
+        try
+        {
+            var kitchen = await _kitchenRepository.GetByIdWithDetailsAsync(id);
+            if (kitchen == null)
+                return KitchenResult.Failure(KitchenErrors.Authorization.NotFound(id));
+
+            if (kitchen.OwnerId != userId)
+                return KitchenResult.Failure(KitchenErrors.Authorization.AccessDenied(id, userId));
+
+            if (kitchen.Ingredients?.Any() == true)
+                return KitchenResult.Failure(KitchenErrors.BusinessRules.CannotDeleteWithActiveIngredients(kitchen.Ingredients.Count));
+
+            if (kitchen.Recipes?.Any() == true)
+                return KitchenResult.Failure(KitchenErrors.BusinessRules.CannotDeleteWithActiveRecipes(kitchen.Recipes.Count));
+
+            var success = await _kitchenRepository.DeleteAsync(id);
+            if (!success)
+                return KitchenResult.Failure(KitchenErrors.DatabaseError("kitchen deletion"));
+
+            return KitchenResult.Success();
+        }
+        catch (Exception ex)
+        {
+            return KitchenResult.Failure(KitchenErrors.UnexpectedError("kitchen deletion", ex));
+        }
+    }
+
+    public async Task<KitchenStatsResult> GetKitchenStatsAsync(Guid kitchenId, Guid userId)
+    {
+        try
+        {
+            // Verificar se cozinha existe e autorização
+            var kitchen = await _kitchenRepository.GetByIdWithDetailsAsync(kitchenId);
+            if (kitchen == null)
+                return KitchenStatsResult.Failure(KitchenErrors.Authorization.NotFound(kitchenId));
+
+            if (kitchen.OwnerId != userId)
+                return KitchenStatsResult.Failure(KitchenErrors.Authorization.AccessDenied(kitchenId, userId));
+
+            // Calcular estatísticas
+            var totalIngredients = kitchen.Ingredients?.Count ?? 0;
+            var lowStockCount = kitchen.Ingredients?.Count(i => i.IsLowStock) ?? 0;
+            var totalRecipes = kitchen.Recipes?.Count ?? 0;
+
+            // Calcular valor total do estoque
+            decimal totalStockValue = 0;
+            if (kitchen.Ingredients?.Any() == true)
+            {
+                foreach (var ingredient in kitchen.Ingredients)
+                {
+                    totalStockValue += ingredient.CurrentStock * ingredient.LastUnitPrice;
+                }
+            }
+
+            // Movimentações recentes (último mês)
+            var lastMonth = DateTime.UtcNow.AddDays(-30);
+            var recentMovements = 0;
+            if (kitchen.Ingredients?.Any() == true)
+            {
+                recentMovements = kitchen.Ingredients
+                    .SelectMany(i => i.StockEntries ?? new List<StockEntryEntity>())
+                    .Count(se => se.MovementDate >= lastMonth);
+            }
+
+            var stats = new KitchenStatsResponseDto(
+                totalIngredients,
+                lowStockCount,
+                totalRecipes,
+                totalStockValue,
+                recentMovements
+            );
+
+            return KitchenStatsResult.Success(stats);
+        }
+        catch (Exception ex)
+        {
+            return KitchenStatsResult.Failure(KitchenErrors.Operations.StatsCalculationFailed(kitchenId, ex));
+        }
+    }
+
+    private Result ValidateCreateKitchenRequest(CreateKitchenDto request)
+    {
+        var errors = new List<IError>();
+
+        if (string.IsNullOrWhiteSpace(request.Name))
+            errors.Add(KitchenErrors.Validation.NameRequired);
+        else if (request.Name.Length > 100)
+            errors.Add(KitchenErrors.Validation.NameTooLong(100));
+
+        if (!string.IsNullOrEmpty(request.Description) && request.Description.Length > 500)
+            errors.Add(KitchenErrors.Validation.DescriptionTooLong(500));
+
+        return errors.Any() ? Result.Fail(errors) : Result.Ok();
+    }
+
+    private Result ValidateUpdateKitchenRequest(UpdateKitchenDto request)
+    {
+        var errors = new List<IError>();
+
+        if (string.IsNullOrWhiteSpace(request.Name))
+            errors.Add(KitchenErrors.Validation.NameRequired);
+        else if (request.Name.Length > 100)
+            errors.Add(KitchenErrors.Validation.NameTooLong(100));
+
+        if (!string.IsNullOrEmpty(request.Description) && request.Description.Length > 500)
+            errors.Add(KitchenErrors.Validation.DescriptionTooLong(500));
+
+        return errors.Any() ? Result.Fail(errors) : Result.Ok();
+    }
+
+    private KitchenResponseDto MapToDto(KitchenEntity kitchen)
+    {
+        var ingredientCount = kitchen.Ingredients?.Count ?? 0;
+        var recipeCount = kitchen.Recipes?.Count ?? 0;
+        var lowStockCount = kitchen.Ingredients?.Count(i => i.IsLowStock) ?? 0;
+
+        return new KitchenResponseDto(
+            kitchen.Id,
+            kitchen.Name,
+            kitchen.Description,
+            ingredientCount,
+            recipeCount,
+            lowStockCount,
+            kitchen.CreatedAt
+        );
+    }
+}

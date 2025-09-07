@@ -43,24 +43,6 @@ public static class UserErrors
                 .WithMetadata("Type", "BusinessRule");
     }
 
-    public static class Authentication
-    {
-        public static Error InvalidCredentials =>
-            new Error("Invalid email or password")
-                .WithMetadata("ErrorCode", "USER_INVALID_CREDENTIALS")
-                .WithMetadata("Type", "Authentication");
-
-        public static Error UserNotFound(string email) =>
-            new Error($"User with email '{email}' not found")
-                .WithMetadata("ErrorCode", "USER_NOT_FOUND")
-                .WithMetadata("Type", "NotFound");
-
-        public static Error TokenGenerationFailed =>
-            new Error("Failed to generate authentication token")
-                .WithMetadata("ErrorCode", "USER_TOKEN_FAILED")
-                .WithMetadata("Type", "Internal");
-    }
-
     public static class BusinessRules
     {
         public static Error PlanNotAvailable(string plan) =>
@@ -89,4 +71,9 @@ public static class UserErrors
             .WithMetadata("Operation", operation)
             .WithMetadata("Type", "Internal")
             .CausedBy(ex);
+
+    public static Error AccessDenied() =>
+        new Error($"User does not have access")
+            .WithMetadata("ErrorCode", "USER_ACCESS_DENIED")
+            .WithMetadata("Type", "Forbidden");
 }

@@ -8,7 +8,7 @@ public class IngredientEntity : BaseEntity
     public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
 
-    public int UnitOfMeasureId { get; set; }
+    public Guid UnitOfMeasureId { get; set; }
     public UnitOfMeasureEntity UnitOfMeasure { get; set; } = null!;
 
     public decimal CurrentStock { get; set; } = 0;

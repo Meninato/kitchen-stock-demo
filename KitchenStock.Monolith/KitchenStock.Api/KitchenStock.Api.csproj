@@ -9,10 +9,12 @@
   <ItemGroup>
     <PackageReference Include="MediatR" Version="13.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.5" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\KitchenStock.Application\KitchenStock.Application.csproj" />
+    <ProjectReference Include="..\KitchenStock.Infrastructure\KitchenStock.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

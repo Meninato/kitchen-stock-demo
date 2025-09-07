@@ -7,7 +7,7 @@ public class KitchenEntity : BaseEntity
 
     public string Description { get; set; } = string.Empty;
 
-    public int OwnerId { get; set; }
+    public Guid OwnerId { get; set; }
     public UserEntity Owner { get; set; } = null!;
 
     public ICollection<IngredientEntity> Ingredients { get; set; } = new List<IngredientEntity>();

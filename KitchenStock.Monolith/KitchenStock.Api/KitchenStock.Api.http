@@ -1,0 +1,5 @@
+@KitchenStock.Api_HostAddress = http://localhost:5022
+
+###
+POST KitchenStock.Api_HostAddress
+Content-Type: "application/json"

@@ -11,8 +11,8 @@ public interface IUserService
     Task<AuthResult> LoginAsync(LoginUserDto dto);
     Task<UserResult> GetByIdAsync(Guid userId);
     Task<UserResult> GetByEmailAsync(string email);
-    Task<Result<bool>> CanCreateKitchenAsync(Guid userId, int currentKitchenCount);
     Task<Result<bool>> EmailExistsAsync(string email);
     Task<UserResult> UpdatePlanAsync(Guid userId, UserPlan newPlan);
+    Task<Result<bool>> CanCreateKitchenAsync(Guid userId, int currentKitchenCount);
     Task<Result> DeactivateUserAsync(Guid userId);
 }

@@ -29,7 +29,6 @@ public class AuthController : ControllerBase
     [ProducesResponseType(typeof(object), 404)]
     public async Task<IActionResult> Login([FromBody] LoginUserCommand command)
     {
-        throw new Exception("FORCING EX");
         var result = await _mediator.Send(command);
 
         if (result.IsSuccess)

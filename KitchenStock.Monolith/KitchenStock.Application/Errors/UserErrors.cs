@@ -58,6 +58,11 @@ public static class UserErrors
             .WithMetadata("UserId", userId.ToString())
             .WithMetadata("Type", "NotFound");
 
+    public static Error UserNotFound(string email) =>
+        new Error($"User with email {email} not found")
+            .WithMetadata("ErrorCode", "USER_NOT_FOUND")
+            .WithMetadata("Type", "NotFound");
+
     public static Error DatabaseError(string operation, Exception? ex = null) =>
         new Error($"Database error during {operation}")
             .WithMetadata("ErrorCode", "USER_DATABASE_ERROR")

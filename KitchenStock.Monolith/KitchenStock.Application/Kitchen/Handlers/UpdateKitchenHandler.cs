@@ -17,11 +17,11 @@ public class UpdateKitchenHandler : IRequestHandler<UpdateKitchenCommand, Kitche
 
     public async Task<KitchenResult> Handle(UpdateKitchenCommand request, CancellationToken cancellationToken)
     {
-        return await _kitchenService.UpdateKitchenAsync(MapToDto(request));
+        return await _kitchenService.UpdateKitchenAsync(request.UserId, MapToDto(request));
     }
 
     private UpdateKitchenDto MapToDto(UpdateKitchenCommand request)
     {
-        return new UpdateKitchenDto(request.KitchenId, request.UserId, request.Name, request.Description);
+        return new UpdateKitchenDto(request.KitchenId, request.Name, request.Description);
     }
 }

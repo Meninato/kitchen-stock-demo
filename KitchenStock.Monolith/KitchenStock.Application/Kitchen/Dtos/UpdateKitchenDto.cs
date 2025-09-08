@@ -1,3 +1,3 @@
 ﻿namespace KitchenStock.Application.Kitchen.Dtos;
 
-public record UpdateKitchenDto(Guid KitchenId, Guid UserId, string Name, string Description);
+public record UpdateKitchenDto(Guid KitchenId, string Name, string Description);

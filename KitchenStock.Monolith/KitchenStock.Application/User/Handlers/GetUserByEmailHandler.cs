@@ -5,7 +5,7 @@ using MediatR;
 
 namespace KitchenStock.Application.User.Handlers;
 
-public class GetUserByEmailHandler : IRequestHandler<GetUserByEmailQuery, KitchenResult>
+public class GetUserByEmailHandler : IRequestHandler<GetUserByEmailQuery, UserResult>
 {
     private readonly IUserService _userService;
 
@@ -14,7 +14,7 @@ public class GetUserByEmailHandler : IRequestHandler<GetUserByEmailQuery, Kitche
         _userService = userService;
     }
 
-    public async Task<KitchenResult> Handle(GetUserByEmailQuery request, CancellationToken cancellationToken)
+    public async Task<UserResult> Handle(GetUserByEmailQuery request, CancellationToken cancellationToken)
     {
         return await _userService.GetByEmailAsync(request.Email);
     }

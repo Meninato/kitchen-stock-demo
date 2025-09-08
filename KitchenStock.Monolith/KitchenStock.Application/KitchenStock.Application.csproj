@@ -17,7 +17,6 @@
 
   <ItemGroup>
     <Folder Include="Ingredient\Dto\" />
-    <Folder Include="Kitchen\Queries\" />
   </ItemGroup>
 
 </Project>

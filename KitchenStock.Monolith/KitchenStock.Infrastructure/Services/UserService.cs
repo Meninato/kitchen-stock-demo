@@ -17,24 +17,24 @@ public class UserService : IUserService
         _userRepository = userRepository;
     }
 
-    public async Task<KitchenResult> RegisterAsync(RegisterUserDto dto)
+    public async Task<UserResult> RegisterAsync(RegisterUserDto dto)
     {
         try
         {
             var validationResult = ValidateUserRegistration(dto);
             if (validationResult.IsFailed)
-                return KitchenResult.Failure(validationResult.Errors);
+                return UserResult.Failure(validationResult.Errors);
 
             var normalizedEmail = dto.Email.Trim().ToLowerInvariant();
 
             if (await _userRepository.ExistsAsync(normalizedEmail))
             {
-                return KitchenResult.Failure(UserErrors.Registration.EmailAlreadyExists(normalizedEmail));
+                return UserResult.Failure(UserErrors.Registration.EmailAlreadyExists(normalizedEmail));
             }
 
             if (!IsPasswordStrong(dto.Password))
             {
-                return KitchenResult.Failure(UserErrors.Registration.PasswordTooWeak);
+                return UserResult.Failure(UserErrors.Registration.PasswordTooWeak);
             }
 
             var user = new UserEntity
@@ -48,35 +48,35 @@ public class UserService : IUserService
             var createdUser = await _userRepository.CreateAsync(user);
             var userDto = MapToDto(createdUser);
 
-            return KitchenResult.Success(userDto);
+            return UserResult.Success(userDto);
         }
         catch (Exception ex)
         {
-            return KitchenResult.Failure(UserErrors.UnexpectedError("user registration", ex));
+            return UserResult.Failure(UserErrors.UnexpectedError("user registration", ex));
         }
     }
 
-    public async Task<KitchenResult> UpdateAsync(Guid userId, UpdateUserDto dto)
+    public async Task<UserResult> UpdateAsync(Guid userId, UpdateUserDto dto)
     {
         var user = await _userRepository.GetByIdAsync(userId);
         if (user == null)
         {
-            return KitchenResult.Failure(UserErrors.UserNotFound(userId));
+            return UserResult.Failure(UserErrors.UserNotFound(userId));
         }
 
         var validationResult = ValidateUserUpdate(dto);
         if (validationResult.IsFailed)
-            return KitchenResult.Failure(validationResult.Errors);
+            return UserResult.Failure(validationResult.Errors);
 
         user.Name = dto.Name.Trim();
 
         var updatedUser = await _userRepository.UpdateAsync(user);
         var userDto = MapToDto(updatedUser);
 
-        return KitchenResult.Success(userDto);
+        return UserResult.Success(userDto);
     }
 
-    public async Task<KitchenResult> GetByIdAsync(Guid userId)
+    public async Task<UserResult> GetByIdAsync(Guid userId)
     {
         try
         {
@@ -84,19 +84,19 @@ public class UserService : IUserService
 
             if (user == null)
             {
-                return KitchenResult.Failure(UserErrors.UserNotFound(userId));
+                return UserResult.Failure(UserErrors.UserNotFound(userId));
             }
 
             var userDto = MapToDto(user);
-            return KitchenResult.Success(userDto);
+            return UserResult.Success(userDto);
         }
         catch (Exception ex)
         {
-            return KitchenResult.Failure(UserErrors.UnexpectedError("get user by id", ex));
+            return UserResult.Failure(UserErrors.UnexpectedError("get user by id", ex));
         }
     }
 
-    public async Task<KitchenResult> GetByEmailAsync(string email)
+    public async Task<UserResult> GetByEmailAsync(string email)
     {
         try
         {
@@ -105,15 +105,15 @@ public class UserService : IUserService
 
             if (user == null)
             {
-                return KitchenResult.Failure(UserErrors.Authentication.UserNotFound(normalizedEmail));
+                return UserResult.Failure(UserErrors.UserNotFound(normalizedEmail));
             }
 
             var userDto = MapToDto(user);
-            return KitchenResult.Success(userDto);
+            return UserResult.Success(userDto);
         }
         catch (Exception ex)
         {
-            return KitchenResult.Failure(UserErrors.UnexpectedError("get user by email", ex));
+            return UserResult.Failure(UserErrors.UnexpectedError("get user by email", ex));
         }
     }
 

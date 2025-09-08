@@ -3,4 +3,4 @@ using MediatR;
 
 namespace KitchenStock.Application.User.Queries;
 
-public record GetUserByEmailQuery(string Email) : IRequest<KitchenResult>;
+public record GetUserByEmailQuery(string Email) : IRequest<UserResult>;

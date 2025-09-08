@@ -7,4 +7,4 @@ public record RegisterUserCommand(
     string Name,
     string Email,
     string Password
-) : IRequest<KitchenResult>;
+) : IRequest<UserResult>;

@@ -19,7 +19,7 @@ public class KitchenService : IKitchenService
         _userRepository = userRepository;
     }
 
-    public async Task<KitchenResult> CreateKitchenAsync(CreateKitchenDto request)
+    public async Task<KitchenResult> CreateKitchenAsync(Guid userId, CreateKitchenDto request)
     {
         try
         {
@@ -27,18 +27,18 @@ public class KitchenService : IKitchenService
             if (validationResult.IsFailed)
                 return KitchenResult.Failure(validationResult.Errors);
 
-            var user = await _userRepository.GetByIdAsync(request.UserId);
+            var user = await _userRepository.GetByIdAsync(userId);
             if (user == null)
-                return KitchenResult.Failure(UserErrors.UserNotFound(request.UserId));
+                return KitchenResult.Failure(UserErrors.UserNotFound(userId));
 
             //TODO: Check somewhere max allowed kitchens based on plan
-            var currentKitchenCount = await _kitchenRepository.CountByUserIdAsync(request.UserId);
+            var currentKitchenCount = await _kitchenRepository.CountByUserIdAsync(userId);
             if (currentKitchenCount >= 5)
                 return KitchenResult.Failure(KitchenErrors.BusinessRules.MaxKitchensReached(5, currentKitchenCount));
 
-            var existingKitchens = await _kitchenRepository.GetByUserIdAsync(request.UserId);
+            var existingKitchens = await _kitchenRepository.GetByUserIdAsync(userId);
             if (existingKitchens.Any(k => k.Name.Equals(request.Name.Trim(), StringComparison.OrdinalIgnoreCase)))
-                return KitchenResult.Failure(KitchenErrors.BusinessRules.KitchenNameAlreadyExists(request.Name, request.UserId));
+                return KitchenResult.Failure(KitchenErrors.BusinessRules.KitchenNameAlreadyExists(request.Name, userId));
 
             if (user.Plan == UserPlan.Basic && currentKitchenCount >= 1)
                 return KitchenResult.Failure(KitchenErrors.BusinessRules.UserPlanDoesNotAllowMultipleKitchens(user.Plan.ToString()));
@@ -47,7 +47,7 @@ public class KitchenService : IKitchenService
             {
                 Name = request.Name.Trim(),
                 Description = request.Description?.Trim() ?? string.Empty,
-                OwnerId = request.UserId
+                OwnerId = userId
             };
 
             var createdKitchen = await _kitchenRepository.CreateAsync(kitchen);

@@ -106,7 +106,7 @@ public class KitchenService : IKitchenService
         }
     }
 
-    public async Task<KitchenResult> UpdateKitchenAsync(UpdateKitchenDto request)
+    public async Task<KitchenResult> UpdateKitchenAsync(Guid userId, UpdateKitchenDto request)
     {
         try
         {
@@ -118,12 +118,12 @@ public class KitchenService : IKitchenService
             if (kitchen == null)
                 return KitchenResult.Failure(KitchenErrors.Authorization.NotFound(request.KitchenId));
 
-            if (kitchen.OwnerId != request.UserId)
-                return KitchenResult.Failure(KitchenErrors.Authorization.AccessDenied(request.KitchenId, request.UserId));
+            if (kitchen.OwnerId != userId)
+                return KitchenResult.Failure(KitchenErrors.Authorization.AccessDenied(request.KitchenId, userId));
 
-            var existingKitchens = await _kitchenRepository.GetByUserIdAsync(request.UserId);
+            var existingKitchens = await _kitchenRepository.GetByUserIdAsync(userId);
             if (existingKitchens.Any(k => k.Id != request.KitchenId && k.Name.Equals(request.Name.Trim(), StringComparison.OrdinalIgnoreCase)))
-                return KitchenResult.Failure(KitchenErrors.BusinessRules.KitchenNameAlreadyExists(request.Name, request.UserId));
+                return KitchenResult.Failure(KitchenErrors.BusinessRules.KitchenNameAlreadyExists(request.Name, userId));
 
             kitchen.Name = request.Name.Trim();
             kitchen.Description = request.Description?.Trim() ?? string.Empty;

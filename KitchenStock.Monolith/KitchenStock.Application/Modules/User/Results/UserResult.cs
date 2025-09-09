@@ -1,7 +1,7 @@
 ﻿using FluentResults;
-using KitchenStock.Application.User.Dtos;
+using KitchenStock.Application.Modules.User.Dtos;
 
-namespace KitchenStock.Application.User.Results;
+namespace KitchenStock.Application.Modules.User.Results;
 
 public class UserResult : Result<UserResponseDto>
 {
@@ -23,6 +23,7 @@ public class UserResult : Result<UserResponseDto>
     }
 
     public static UserResult Success(UserResponseDto user) => new(user);
+    public static UserResult Success() => new();
     public static UserResult Failure(IError error) => new(error);
     public static UserResult Failure(IEnumerable<IError> errors) => new(errors);
 }

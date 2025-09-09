@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Ingredient\Dto\" />
+    <Folder Include="Modules\User\MediatR\Queries\" />
   </ItemGroup>
 
 </Project>

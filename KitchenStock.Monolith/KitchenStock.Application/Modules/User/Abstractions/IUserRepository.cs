@@ -1,6 +1,7 @@
-﻿using KitchenStock.Domain.Entities;
+﻿using KitchenStock.Application.Abstractions;
+using KitchenStock.Domain.Entities;
 
-namespace KitchenStock.Application.Abstractions;
+namespace KitchenStock.Application.Modules.User.Abstractions;
 
 public interface IUserRepository : IGenericRepository<UserEntity>
 {

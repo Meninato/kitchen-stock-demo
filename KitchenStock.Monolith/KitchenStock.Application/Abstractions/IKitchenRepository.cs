@@ -8,4 +8,5 @@ public interface IKitchenRepository : IGenericRepository<KitchenEntity>
     Task<IEnumerable<KitchenEntity>> GetByUserIdAsync(Guid userId);
     Task<int> CountByUserIdAsync(Guid userId);
     Task<bool> UserOwnsKitchenAsync(Guid kitchenId, Guid userId);
+    Task<bool> ExistsInUserAsync(string name, Guid userId, Guid? excludeId = null);
 }

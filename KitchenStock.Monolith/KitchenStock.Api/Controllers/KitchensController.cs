@@ -4,6 +4,7 @@ using KitchenStock.Application.Kitchen.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace KitchenStock.Api.Controllers;
 
@@ -71,7 +72,7 @@ public class KitchensController : ApiControllerBase
         if (result.IsSuccess)
             return ApiOk(result);
 
-
+        return FirstErrorToActionResult(result.Errors);
     }
 
     [HttpDelete("{id}")]
@@ -82,6 +83,19 @@ public class KitchensController : ApiControllerBase
 
         if (result.IsSuccess)
             return NoContent();
+
+        return FirstErrorToActionResult(result.Errors);
+    }
+
+    [HttpGet("{id}/stats")]
+    public async Task<IActionResult> GetKitchenStats(Guid id)
+    {
+
+        var query = new GetKitchenStatsQuery(id, CurrentUserId);
+        var result = await _mediator.Send(query);
+
+        if (result.IsSuccess)
+            return ApiOk(result);
 
         return FirstErrorToActionResult(result.Errors);
     }

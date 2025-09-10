@@ -2,10 +2,7 @@
 
 public class KitchenStockSettings
 {
-    public AuthServiceSettings AuthServiceSettings { get; set; } = new();
-}
+    public const string KITCHENSTOCK_SECTION = "KitchenStock";
 
-public class AuthServiceSettings
-{
-
+    public VaultSecretPathSettings VaultSecretPaths { get; set; } = new();
 }

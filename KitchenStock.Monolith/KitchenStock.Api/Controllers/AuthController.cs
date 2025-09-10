@@ -1,4 +1,4 @@
-﻿using KitchenStock.Application.Auth.Commands;
+﻿using KitchenStock.Application.Modules.Auth.MediatR.Commands;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,7 +15,7 @@ public class AuthController : ApiControllerBase
         _mediator = mediator;
     }
 
-    [HttpPost("login")]
+    [HttpPost("authenticate")]
     public async Task<IActionResult> Login([FromBody] AuthenticateUserCommand command)
     {
         var result = await _mediator.Send(command);

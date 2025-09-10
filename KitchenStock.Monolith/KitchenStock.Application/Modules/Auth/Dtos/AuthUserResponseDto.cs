@@ -1,3 +1,5 @@
-﻿namespace KitchenStock.Application.Modules.Auth.Dtos;
+﻿using KitchenStock.Domain.Enums;
 
-public record AuthUserResponseDto();
+namespace KitchenStock.Application.Modules.Auth.Dtos;
+
+public record AuthUserResponseDto(Guid Id, string Email, string Name, UserPlan Plan);

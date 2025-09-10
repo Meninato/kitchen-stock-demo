@@ -1,10 +1,9 @@
-﻿using KitchenStock.Application.Kitchen.Commands;
-using KitchenStock.Application.Kitchen.Dtos;
-using KitchenStock.Application.Kitchen.Queries;
+﻿using KitchenStock.Application.Modules.Kitchen.Dtos;
+using KitchenStock.Application.Modules.Kitchen.MediatR.Commands;
+using KitchenStock.Application.Modules.Kitchen.MediatR.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace KitchenStock.Api.Controllers;
 
@@ -31,6 +30,7 @@ public class KitchensController : ApiControllerBase
 
         return FirstErrorToActionResult(result.Errors);
     }
+
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetKitchen(Guid id)
@@ -66,7 +66,7 @@ public class KitchensController : ApiControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateKitchen(Guid id, [FromBody] UpdateKitchenDto request)
     {
-        var command = new UpdateKitchenCommand(request.KitchenId, CurrentUserId, request.Name, request.Description);
+        var command = new UpdateKitchenCommand(id, CurrentUserId, request.Name, request.Description);
         var result = await _mediator.Send(command);
 
         if (result.IsSuccess)

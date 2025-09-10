@@ -1,6 +1,6 @@
 using KitchenStock.Api;
 using KitchenStock.Api.Middlewares;
-using KitchenStock.Application.User.Commands;
+using KitchenStock.Application.Modules.Auth.Abstractions;
 using KitchenStock.Infrastructure.Persistence;
 using System.Text.Json;
 
@@ -17,7 +17,7 @@ builder.Services.AddControllers()
 builder.Services.AddOpenApi();
 
 builder.Services.AddMediatR(cfg =>
-    cfg.RegisterServicesFromAssembly(typeof(RegisterUserCommand).Assembly)
+    cfg.RegisterServicesFromAssembly(typeof(IAuthService).Assembly)
 );
 
 builder.Services.AddKitchenStockDbContext();

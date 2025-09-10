@@ -1,7 +1,7 @@
 ﻿using FluentResults;
-using KitchenStock.Application.Auth.Dtos;
+using KitchenStock.Application.Modules.Auth.Dtos;
 
-namespace KitchenStock.Application.Auth.Results;
+namespace KitchenStock.Application.Modules.Auth.Results;
 
 public class AuthResult : Result<AuthResponseDto>
 {
@@ -23,6 +23,7 @@ public class AuthResult : Result<AuthResponseDto>
     }
 
     public static AuthResult Success(AuthResponseDto user) => new(user);
+    public static AuthResult Success() => new();
     public static AuthResult Failure(IError error) => new(error);
     public static AuthResult Failure(IEnumerable<IError> errors) => new(errors);
 }

@@ -60,6 +60,14 @@ public static class UserErrors
                 .WithMetadata("Type", "BusinessRule");
     }
 
+    public static class Authorization
+    {
+        public static Error AccessDenied =>
+            new Error($"User does not have access")
+                .WithMetadata("ErrorCode", "USER_ACCESS_DENIED")
+                .WithMetadata("Type", "Forbidden");
+    }
+
     public static Error UserNotFound(Guid userId) =>
         new Error($"User with ID {userId} not found")
             .WithMetadata("ErrorCode", "USER_NOT_FOUND")

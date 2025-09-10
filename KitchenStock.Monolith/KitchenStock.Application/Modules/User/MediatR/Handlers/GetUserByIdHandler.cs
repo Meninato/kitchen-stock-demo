@@ -1,9 +1,9 @@
-﻿using KitchenStock.Application.Abstractions;
-using KitchenStock.Application.User.Queries;
-using KitchenStock.Application.User.Results;
+﻿using KitchenStock.Application.Modules.User.Abstractions;
+using KitchenStock.Application.Modules.User.MediatR.Queries;
+using KitchenStock.Application.Modules.User.Results;
 using MediatR;
 
-namespace KitchenStock.Application.User.Handlers;
+namespace KitchenStock.Application.Modules.User.MediatR.Handlers;
 
 public class GetUserByIdHandler : IRequestHandler<GetUserByIdQuery, UserResult>
 {
@@ -16,6 +16,6 @@ public class GetUserByIdHandler : IRequestHandler<GetUserByIdQuery, UserResult>
 
     public async Task<UserResult> Handle(GetUserByIdQuery request, CancellationToken cancellationToken)
     {
-        return await _userService.GetByIdAsync(request.UserId);
+        return await _userService.GetUserByIdAsync(request.UserId);
     }
 }

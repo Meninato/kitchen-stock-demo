@@ -125,7 +125,7 @@ public class UserService : IUserService
         }
     }
 
-    public async Task<UserResult> UpdateUserPlanAsync(Guid id, UserPlan newPlan)
+    public async Task<UserResult> UpdateUserPlanAsync(Guid id, UpdateUserPlanDto request)
     {
         try
         {
@@ -134,13 +134,13 @@ public class UserService : IUserService
                 return UserResult.Failure(UserErrors.UserNotFound(id));
 
             var currentKitchens = await _userRepository.GetKitchenCountAsync(id);
-            var newMaxKitchens = GetMaxKitchensForPlan(newPlan);
+            var newMaxKitchens = GetMaxKitchensForPlan(request.Plan);
 
             if (currentKitchens > newMaxKitchens)
                 return UserResult.Failure(UserErrors.BusinessRules.CannotDowngradePlan(
-                    user.Plan.ToString(), newPlan.ToString(), "User has more kitchens than allowed in new plan"));
+                    user.Plan.ToString(), request.Plan.ToString(), "User has more kitchens than allowed in new plan"));
 
-            user.Plan = newPlan;
+            user.Plan = request.Plan;
             var updatedUser = await _userRepository.UpdateAsync(user);
             var response = MapToResponse(updatedUser, currentKitchens);
 

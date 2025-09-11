@@ -1,6 +1,7 @@
-﻿using KitchenStock.Domain.Entities;
+﻿using KitchenStock.Application.Abstractions;
+using KitchenStock.Domain.Entities;
 
-namespace KitchenStock.Application.Abstractions;
+namespace KitchenStock.Application.Modules.Ingredients.Abstractions;
 
 public interface IIngredientRepository : IGenericRepository<IngredientEntity>
 {
@@ -8,7 +9,7 @@ public interface IIngredientRepository : IGenericRepository<IngredientEntity>
     Task<IEnumerable<IngredientEntity>> GetByKitchenIdAsync(Guid kitchenId);
     Task<IEnumerable<IngredientEntity>> GetLowStockByKitchenIdAsync(Guid kitchenId);
     Task<bool> ExistsInKitchenAsync(string name, Guid kitchenId, Guid? excludeId = null);
-    Task<IEnumerable<IngredientEntity>> GetByIdsAsync(IngredientEntity[] ingredientIds);
+    Task<IEnumerable<IngredientEntity>> GetByIdsAsync(Guid[] ingredientIds);
     Task<IEnumerable<IngredientEntity>> SearchByNameAsync(string searchTerm, Guid kitchenId);
     Task<decimal> GetTotalStockValueAsync(Guid kitchenId);
 }

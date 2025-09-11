@@ -1,9 +1,12 @@
 ﻿using FluentResults;
-using KitchenStock.Application.Abstractions;
-using KitchenStock.Application.Errors;
+using KitchenStock.Application.Modules.Ingredients.Abstractions;
+using KitchenStock.Application.Modules.Ingredients.Dtos;
+using KitchenStock.Application.Modules.Ingredients.Results;
+using KitchenStock.Application.Modules.Kitchen.Abstractions;
+using KitchenStock.Domain.Entities;
 using KitchenStock.Domain.Enums;
 
-namespace KitchenStock.Infrastructure.Services;
+namespace KitchenStock.Infrastructure.Modules.Ingredients.Services;
 
 public class IngredientService : IIngredientService
 {
@@ -21,39 +24,31 @@ public class IngredientService : IIngredientService
         _stockRepository = stockRepository;
     }
 
-    public async Task<IngredientResult> CreateIngredientAsync(int userId, CreateIngredientRequest request)
+    public async Task<IngredientResult> CreateIngredientAsync(Guid userId, CreateIngredientDto request)
     {
         try
         {
-            // Validação de entrada
             var validationResult = ValidateCreateIngredientRequest(request);
             if (validationResult.IsFailed)
                 return IngredientResult.Failure(validationResult.Errors);
 
-            // Verificar se usuário tem acesso à cozinha
             if (!await _kitchenRepository.UserOwnsKitchenAsync(request.KitchenId, userId))
                 return IngredientResult.Failure(IngredientErrors.Authorization.KitchenAccessDenied(request.KitchenId, userId));
 
-            // Verificar se ingrediente já existe na cozinha
             if (await _ingredientRepository.ExistsInKitchenAsync(request.Name, request.KitchenId))
                 return IngredientResult.Failure(IngredientErrors.BusinessRules.AlreadyExistsInKitchen(request.Name, request.KitchenId));
 
-            // Criar ingrediente
-            var ingredient = new Ingredient
+            var ingredient = new IngredientEntity
             {
                 Name = request.Name.Trim(),
                 Description = request.Description?.Trim() ?? string.Empty,
-                Category = request.Category?.Trim() ?? string.Empty,
                 KitchenId = request.KitchenId,
                 UnitOfMeasureId = request.UnitOfMeasureId,
                 CurrentStock = 0,
-                MinimumStock = request.MinimumStock,
-                CreatedAt = DateTime.UtcNow
+                MinimumStock = request.MinimumStock
             };
 
             var createdIngredient = await _ingredientRepository.CreateAsync(ingredient);
-
-            // Recarregar com relacionamentos
             var ingredientWithDetails = await _ingredientRepository.GetByIdAsync(createdIngredient.Id);
             var response = await MapToResponseAsync(ingredientWithDetails!);
 
@@ -65,7 +60,7 @@ public class IngredientService : IIngredientService
         }
     }
 
-    public async Task<IngredientResult> GetIngredientByIdAsync(int id, int userId)
+    public async Task<IngredientResult> GetIngredientByIdAsync(Guid id, Guid userId)
     {
         try
         {
@@ -85,7 +80,7 @@ public class IngredientService : IIngredientService
         }
     }
 
-    public async Task<IngredientListResult> GetKitchenIngredientsAsync(int kitchenId, int userId)
+    public async Task<IngredientListResult> GetKitchenIngredientsAsync(Guid kitchenId, Guid userId)
     {
         try
         {
@@ -93,7 +88,7 @@ public class IngredientService : IIngredientService
                 return IngredientListResult.Failure(IngredientErrors.Authorization.KitchenAccessDenied(kitchenId, userId));
 
             var ingredients = await _ingredientRepository.GetByKitchenIdAsync(kitchenId);
-            var responses = new List<IngredientResponse>();
+            var responses = new List<IngredientResponseDto>();
 
             foreach (var ingredient in ingredients)
             {
@@ -108,7 +103,7 @@ public class IngredientService : IIngredientService
         }
     }
 
-    public async Task<IngredientListResult> GetLowStockIngredientsAsync(int kitchenId, int userId)
+    public async Task<IngredientListResult> GetLowStockIngredientsAsync(Guid kitchenId, Guid userId)
     {
         try
         {
@@ -116,7 +111,7 @@ public class IngredientService : IIngredientService
                 return IngredientListResult.Failure(IngredientErrors.Authorization.KitchenAccessDenied(kitchenId, userId));
 
             var ingredients = await _ingredientRepository.GetLowStockByKitchenIdAsync(kitchenId);
-            var responses = new List<IngredientResponse>();
+            var responses = new List<IngredientResponseDto>();
 
             foreach (var ingredient in ingredients)
             {
@@ -131,11 +126,10 @@ public class IngredientService : IIngredientService
         }
     }
 
-    public async Task<IngredientResult> UpdateIngredientAsync(int id, int userId, UpdateIngredientRequest request)
+    public async Task<IngredientResult> UpdateIngredientAsync(Guid id, Guid userId, UpdateIngredientDto request)
     {
         try
         {
-            // Validação de entrada
             var validationResult = ValidateUpdateIngredientRequest(request);
             if (validationResult.IsFailed)
                 return IngredientResult.Failure(validationResult.Errors);
@@ -147,14 +141,11 @@ public class IngredientService : IIngredientService
             if (!await _kitchenRepository.UserOwnsKitchenAsync(ingredient.KitchenId, userId))
                 return IngredientResult.Failure(IngredientErrors.Authorization.KitchenAccessDenied(ingredient.KitchenId, userId));
 
-            // Verificar se nome não conflita
             if (await _ingredientRepository.ExistsInKitchenAsync(request.Name, ingredient.KitchenId, id))
                 return IngredientResult.Failure(IngredientErrors.BusinessRules.AlreadyExistsInKitchen(request.Name, ingredient.KitchenId));
 
-            // Atualizar
             ingredient.Name = request.Name.Trim();
             ingredient.Description = request.Description?.Trim() ?? string.Empty;
-            ingredient.Category = request.Category?.Trim() ?? string.Empty;
             ingredient.UnitOfMeasureId = request.UnitOfMeasureId;
             ingredient.MinimumStock = request.MinimumStock;
 
@@ -170,7 +161,7 @@ public class IngredientService : IIngredientService
         }
     }
 
-    public async Task<IngredientResult> DeleteIngredientAsync(int id, int userId)
+    public async Task<IngredientResult> DeleteIngredientAsync(Guid id, Guid userId)
     {
         try
         {
@@ -181,7 +172,6 @@ public class IngredientService : IIngredientService
             if (!await _kitchenRepository.UserOwnsKitchenAsync(ingredient.KitchenId, userId))
                 return IngredientResult.Failure(IngredientErrors.Authorization.KitchenAccessDenied(ingredient.KitchenId, userId));
 
-            // Verificar regras de negócio
             if (ingredient.StockEntries?.Any() == true)
                 return IngredientResult.Failure(IngredientErrors.BusinessRules.CannotDeleteWithStockHistory(ingredient.Name, ingredient.StockEntries.Count));
 
@@ -192,8 +182,7 @@ public class IngredientService : IIngredientService
             if (!success)
                 return IngredientResult.Failure(IngredientErrors.DatabaseError("ingredient deletion"));
 
-            var emptyResponse = new IngredientResponse(id, "", "", "", "", "", 0, 0, false, 0, 0, DateTime.MinValue);
-            return IngredientResult.Success(emptyResponse);
+            return IngredientResult.Success();
         }
         catch (Exception ex)
         {
@@ -201,7 +190,7 @@ public class IngredientService : IIngredientService
         }
     }
 
-    public async Task<IngredientResult> UpdateStockAsync(int id, int userId, UpdateStockRequest request)
+    public async Task<IngredientResult> UpdateStockAsync(Guid id, Guid userId, UpdateStockDto request)
     {
         try
         {
@@ -220,15 +209,13 @@ public class IngredientService : IIngredientService
 
             var updatedIngredient = await _ingredientRepository.UpdateAsync(ingredient);
 
-            // Criar entrada de ajuste
-            var stockEntry = new StockEntry
+            var stockEntry = new StockEntryEntity
             {
                 IngredientId = id,
                 MovementType = StockMovementType.Adjustment,
                 Quantity = request.NewStock - oldStock,
                 Reason = request.Reason?.Trim() ?? "Stock adjustment",
-                MovementDate = DateTime.UtcNow,
-                CreatedAt = DateTime.UtcNow
+                MovementDate = DateTime.UtcNow
             };
 
             await _stockRepository.CreateAsync(stockEntry);
@@ -242,7 +229,7 @@ public class IngredientService : IIngredientService
         }
     }
 
-    private Result ValidateCreateIngredientRequest(CreateIngredientRequest request)
+    private Result ValidateCreateIngredientRequest(CreateIngredientDto request)
     {
         var errors = new List<IError>();
 
@@ -254,16 +241,13 @@ public class IngredientService : IIngredientService
         if (!string.IsNullOrEmpty(request.Description) && request.Description.Length > 500)
             errors.Add(IngredientErrors.Validation.DescriptionTooLong(500));
 
-        if (!string.IsNullOrEmpty(request.Category) && request.Category.Length > 50)
-            errors.Add(IngredientErrors.Validation.CategoryTooLong(50));
-
         if (request.MinimumStock < 0)
             errors.Add(IngredientErrors.Validation.InvalidMinimumStock);
 
         return errors.Any() ? Result.Fail(errors) : Result.Ok();
     }
 
-    private Result ValidateUpdateIngredientRequest(UpdateIngredientRequest request)
+    private Result ValidateUpdateIngredientRequest(UpdateIngredientDto request)
     {
         var errors = new List<IError>();
 
@@ -275,25 +259,21 @@ public class IngredientService : IIngredientService
         if (!string.IsNullOrEmpty(request.Description) && request.Description.Length > 500)
             errors.Add(IngredientErrors.Validation.DescriptionTooLong(500));
 
-        if (!string.IsNullOrEmpty(request.Category) && request.Category.Length > 50)
-            errors.Add(IngredientErrors.Validation.CategoryTooLong(50));
-
         if (request.MinimumStock < 0)
             errors.Add(IngredientErrors.Validation.InvalidMinimumStock);
 
         return errors.Any() ? Result.Fail(errors) : Result.Ok();
     }
 
-    private async Task<IngredientResponse> MapToResponseAsync(Ingredient ingredient)
+    private async Task<IngredientResponseDto> MapToResponseAsync(IngredientEntity ingredient)
     {
         var lastPrice = await _stockRepository.GetLastUnitPriceAsync(ingredient.Id);
         var avgPrice = await _stockRepository.GetAverageUnitPriceAsync(ingredient.Id);
 
-        return new IngredientResponse(
+        return new IngredientResponseDto(
             ingredient.Id,
             ingredient.Name,
             ingredient.Description,
-            ingredient.Category,
             ingredient.UnitOfMeasure?.Name ?? "N/A",
             ingredient.UnitOfMeasure?.Symbol ?? "N/A",
             ingredient.CurrentStock,

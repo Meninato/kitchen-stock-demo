@@ -1,6 +1,7 @@
-﻿using KitchenStock.Application.Ingredient.Dto;
+﻿using KitchenStock.Application.Modules.Ingredients.Dtos;
+using KitchenStock.Application.Modules.Ingredients.Results;
 
-namespace KitchenStock.Application.Abstractions;
+namespace KitchenStock.Application.Modules.Ingredients.Abstractions;
 
 public interface IIngredientService
 {
@@ -8,7 +9,7 @@ public interface IIngredientService
     Task<IngredientResult> GetIngredientByIdAsync(Guid id, Guid userId);
     Task<IngredientListResult> GetKitchenIngredientsAsync(Guid kitchenId, Guid userId);
     Task<IngredientListResult> GetLowStockIngredientsAsync(Guid kitchenId, Guid userId);
-    Task<IngredientResult> UpdateIngredientAsync(Guid id, Guid userId, UpdateIngredientRequest request);
+    Task<IngredientResult> UpdateIngredientAsync(Guid id, Guid userId, UpdateIngredientDto request);
     Task<IngredientResult> DeleteIngredientAsync(Guid id, Guid userId);
-    Task<IngredientResult> UpdateStockAsync(Guid id, Guid userId, UpdateStockRequest request);
+    Task<IngredientResult> UpdateStockAsync(Guid id, Guid userId, UpdateStockDto request);
 }

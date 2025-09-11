@@ -5,7 +5,7 @@ using MediatR;
 
 namespace KitchenStock.Application.Modules.Kitchen.MediatR.Handlers;
 
-internal class GetKitchenStatsHandler : IRequestHandler<GetKitchenStatsQuery, KitchenStatsResult>
+public class GetKitchenStatsHandler : IRequestHandler<GetKitchenStatsQuery, KitchenStatsResult>
 {
     private readonly IKitchenService _kitchenService;
 

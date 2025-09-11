@@ -4,7 +4,7 @@ using KitchenStock.Application.Modules.Kitchen.Results;
 
 namespace KitchenStock.Application.Modules.Kitchen.MediatR.Handlers;
 
-internal class GetKitchenByIdHandler
+public class GetKitchenByIdHandler
 {
     private readonly IKitchenService _kitchenService;
 

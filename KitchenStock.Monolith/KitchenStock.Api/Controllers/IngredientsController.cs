@@ -1,4 +1,6 @@
-﻿using KitchenStock.Application.Modules.Ingredients.MediatR.Queries;
+﻿using KitchenStock.Application.Modules.Ingredients.Dtos;
+using KitchenStock.Application.Modules.Ingredients.MediatR.Commands;
+using KitchenStock.Application.Modules.Ingredients.MediatR.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -29,121 +31,82 @@ public class IngredientsController : ApiControllerBase
         return FirstErrorToActionResult(result.Errors);
     }
 
-    /// <summary>
-    /// Get low stock ingredients for a kitchen
-    /// </summary>
     [HttpGet("low-stock")]
-    [ProducesResponseType(typeof(object), 200)]
-    [ProducesResponseType(typeof(object), 400)]
-    public async Task<IActionResult> GetLowStockIngredients([FromQuery] int kitchenId)
+    public async Task<IActionResult> GetLowStockIngredients([FromQuery] Guid kitchenId)
     {
-        var userId = GetCurrentUserId();
-        var result = await _ingredientService.GetLowStockIngredientsAsync(kitchenId, userId);
+        var query = new GetLowStockIngredientsQuery(kitchenId, CurrentUserId);
+        var result = await _mediator.Send(query);
 
         if (result.IsSuccess)
-        {
-            return Ok(new { success = true, data = result.Value });
-        }
+            return ApiOk(result);
 
-        return result.FirstToActionResult(this);
+        return FirstErrorToActionResult(result.Errors);
     }
 
-    /// <summary>
-    /// Get ingredient by ID
-    /// </summary>
     [HttpGet("{id}")]
-    [ProducesResponseType(typeof(object), 200)]
-    [ProducesResponseType(typeof(object), 404)]
-    public async Task<IActionResult> GetIngredient(int id)
+    public async Task<IActionResult> GetIngredient(Guid id)
     {
-        var userId = GetCurrentUserId();
-        var result = await _ingredientService.GetIngredientByIdAsync(id, userId);
+        var query = new GetIngredientQuery(id, CurrentUserId);
+        var result = await _mediator.Send(query);
 
         if (result.IsSuccess)
-        {
-            return Ok(new { success = true, data = result.Value });
-        }
+            return ApiOk(result);
 
-        return result.FirstToActionResult(this);
+        return FirstErrorToActionResult(result.Errors);
     }
 
-    /// <summary>
-    /// Create new ingredient
-    /// </summary>
     [HttpPost]
-    [ProducesResponseType(typeof(object), 201)]
-    [ProducesResponseType(typeof(object), 400)]
-    public async Task<IActionResult> CreateIngredient([FromBody] CreateIngredientRequest request)
+    public async Task<IActionResult> CreateIngredient([FromBody] CreateIngredientDto request)
     {
-        var userId = GetCurrentUserId();
-        var result = await _ingredientService.CreateIngredientAsync(userId, request);
+        var command = new CreateIngredientCommand(CurrentUserId, request);
+        var result = await _mediator.Send(command);
 
         if (result.IsSuccess)
         {
-            return CreatedAtAction(
+            return ApiCreatedAtAction(
                 nameof(GetIngredient),
+                "Ingredients",
                 new { id = result.Value.Id },
-                new { success = true, data = result.Value }
+                result.Value
             );
         }
 
-        return result.FirstToActionResult(this);
+        return FirstErrorToActionResult(result.Errors);
     }
 
-    /// <summary>
-    /// Update ingredient
-    /// </summary>
     [HttpPut("{id}")]
-    [ProducesResponseType(typeof(object), 200)]
-    [ProducesResponseType(typeof(object), 400)]
-    public async Task<IActionResult> UpdateIngredient(int id, [FromBody] UpdateIngredientRequest request)
+    public async Task<IActionResult> UpdateIngredient(Guid id, [FromBody] UpdateIngredientDto request)
     {
-        var userId = GetCurrentUserId();
-        var result = await _ingredientService.UpdateIngredientAsync(id, userId, request);
+        var command = new UpdateIngredientCommand(id, CurrentUserId, request);
+        var result = await _mediator.Send(command);
 
         if (result.IsSuccess)
-        {
-            return Ok(new { success = true, data = result.Value });
-        }
+            return ApiOk(result);
 
-        return result.FirstToActionResult(this);
+        return FirstErrorToActionResult(result.Errors);
     }
 
-    /// <summary>
-    /// Update ingredient stock
-    /// </summary>
     [HttpPatch("{id}/stock")]
-    [ProducesResponseType(typeof(object), 200)]
-    [ProducesResponseType(typeof(object), 400)]
-    public async Task<IActionResult> UpdateStock(int id, [FromBody] UpdateStockRequest request)
+    public async Task<IActionResult> UpdateStock(Guid id, [FromBody] UpdateStockDto request)
     {
-        var userId = GetCurrentUserId();
-        var result = await _ingredientService.UpdateStockAsync(id, userId, request);
+        var command = new UpdateStockCommand(id, CurrentUserId, request);
+        var result = await _mediator.Send(command);
 
         if (result.IsSuccess)
-        {
-            return Ok(new { success = true, data = result.Value });
-        }
+            return ApiOk(result);
 
-        return result.FirstToActionResult(this);
+        return FirstErrorToActionResult(result.Errors);
     }
 
-    /// <summary>
-    /// Delete ingredient
-    /// </summary>
     [HttpDelete("{id}")]
-    [ProducesResponseType(204)]
-    [ProducesResponseType(typeof(object), 400)]
-    public async Task<IActionResult> DeleteIngredient(int id)
+    public async Task<IActionResult> DeleteIngredient(Guid id)
     {
-        var userId = GetCurrentUserId();
-        var result = await _ingredientService.DeleteIngredientAsync(id, userId);
+        var command = new DeleteIngredientCommand(id, CurrentUserId);
+        var result = await _mediator.Send(command);
 
         if (result.IsSuccess)
-        {
             return NoContent();
-        }
 
-        return result.FirstToActionResult(this);
+        return FirstErrorToActionResult(result.Errors);
     }
 }

@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Modules\Ingredients\MediatR\Commands\" />
+    <Folder Include="Modules\UnitOfMeasure\MediatR\" />
   </ItemGroup>
 
 </Project>

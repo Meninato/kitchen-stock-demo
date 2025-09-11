@@ -1,5 +1,7 @@
 using KitchenStock.Api;
+using KitchenStock.Api.Conventions;
 using KitchenStock.Api.Middlewares;
+using KitchenStock.Api.Transformers;
 using KitchenStock.Application.Modules.Auth.Abstractions;
 using KitchenStock.Infrastructure.Persistence;
 using System.Text.Json;
@@ -8,7 +10,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllers()
+builder.Services.AddControllers(
+    options =>
+    {
+        options.Conventions.Add(new SlugifyControllerTokenConvention(new SlugifyParameterTransformer()));
+    })
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;

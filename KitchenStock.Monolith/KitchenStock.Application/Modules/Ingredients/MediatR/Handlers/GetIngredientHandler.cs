@@ -5,17 +5,17 @@ using MediatR;
 
 namespace KitchenStock.Application.Modules.Ingredients.MediatR.Handlers;
 
-public class GetIngredientsHandler : IRequestHandler<GetIngredientsQuery, IngredientListResult>
+public class GetIngredientHandler : IRequestHandler<GetIngredientQuery, IngredientResult>
 {
     private readonly IIngredientService _ingredientService;
 
-    public GetIngredientsHandler(IIngredientService ingredientService)
+    public GetIngredientHandler(IIngredientService ingredientService)
     {
         _ingredientService = ingredientService;
     }
 
-    public async Task<IngredientListResult> Handle(GetIngredientsQuery request, CancellationToken cancellationToken)
+    public async Task<IngredientResult> Handle(GetIngredientQuery request, CancellationToken cancellationToken)
     {
-        return await _ingredientService.GetKitchenIngredientsAsync(request.KitchenId, request.UserId);
+        return await _ingredientService.GetIngredientByIdAsync(request.IngredientId, request.UserId);
     }
 }

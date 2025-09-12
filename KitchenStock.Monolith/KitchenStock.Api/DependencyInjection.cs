@@ -1,12 +1,24 @@
-﻿using KitchenStock.Application.Abstractions;
-using KitchenStock.Application.Modules.Auth.Abstractions;
+﻿using KitchenStock.Application.Modules.Auth.Abstractions;
+using KitchenStock.Application.Modules.Ingredients.Abstractions;
+using KitchenStock.Application.Modules.Kitchen.Abstractions;
+using KitchenStock.Application.Modules.Stock.Abstractions;
+using KitchenStock.Application.Modules.UnitOfMeasure.Abstractions;
 using KitchenStock.Application.Modules.User.Abstractions;
+using KitchenStock.Application.Security.Vault.Abstractions;
 using KitchenStock.Infrastructure.Modules.Auth.Services;
+using KitchenStock.Infrastructure.Modules.Ingredients.Repositories;
+using KitchenStock.Infrastructure.Modules.Ingredients.Services;
+using KitchenStock.Infrastructure.Modules.Kitchen.Repositories;
+using KitchenStock.Infrastructure.Modules.Kitchen.Services;
+using KitchenStock.Infrastructure.Modules.Stock.Repositories;
+using KitchenStock.Infrastructure.Modules.Stock.Services;
+using KitchenStock.Infrastructure.Modules.UnitOfMeasure.Repositories;
+using KitchenStock.Infrastructure.Modules.UnitOfMeasure.Services;
+using KitchenStock.Infrastructure.Modules.User.Repositories;
 using KitchenStock.Infrastructure.Modules.User.Services;
 using KitchenStock.Infrastructure.Persistence;
 using KitchenStock.Infrastructure.Security.Vault;
 using KitchenStock.Infrastructure.Security.Vault.Configuration;
-using KitchenStock.Infrastructure.Security.Vault.Dtos;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -41,8 +53,18 @@ public static class DependencyInjection
             client.DefaultRequestHeaders.Add("X-Vault-Token", config.Token);
         });
 
+        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IKitchenRepository, KitchenRepository>();
+        services.AddScoped<IIngredientRepository, IngredientRepository>();
+        services.AddScoped<IStockEntryRepository, StockEntryRepository>();
+        services.AddScoped<IUnitOfMeasureRepository, UnitOfMeasureRepository>();
+
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IKitchenService, KitchenService>();
+        services.AddScoped<IIngredientService, IngredientService>();
+        services.AddScoped<IStockEntryService, StockEntryService>();
+        services.AddScoped<IUnitOfMeasureService, UnitOfMeasureService>();
 
         return services;
     }

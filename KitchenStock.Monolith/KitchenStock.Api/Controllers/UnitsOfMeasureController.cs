@@ -1,4 +1,7 @@
-﻿using MediatR;
+﻿using KitchenStock.Application.Modules.UnitOfMeasure.Dtos;
+using KitchenStock.Application.Modules.UnitOfMeasure.MediatR.Commands;
+using KitchenStock.Application.Modules.UnitOfMeasure.MediatR.Queries;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,98 +19,70 @@ public class UnitsOfMeasureController : ApiControllerBase
         _mediator = mediator;
     }
 
-    /// <summary>
-    /// Get all available units of measure
-    /// </summary>
     [HttpGet]
-    [ProducesResponseType(typeof(object), 200)]
     public async Task<IActionResult> GetUnitsOfMeasure()
     {
-        var result = await _unitService.GetAllUnitsAsync();
+        var query = new GetAllUnitOfMeasureQuery();
+        var result = await _mediator.Send(query);
 
         if (result.IsSuccess)
-        {
-            return Ok(new { success = true, data = result.Value });
-        }
+            return ApiOk(result);
 
-        return result.FirstToActionResult(this);
+        return FirstErrorToActionResult(result.Errors);
     }
 
-    /// <summary>
-    /// Get unit of measure by ID
-    /// </summary>
     [HttpGet("{id}")]
-    [ProducesResponseType(typeof(object), 200)]
-    [ProducesResponseType(typeof(object), 404)]
-    public async Task<IActionResult> GetUnitOfMeasure(int id)
+    public async Task<IActionResult> GetUnitOfMeasure(Guid id)
     {
-        var result = await _unitService.GetUnitByIdAsync(id);
+        var query = new GetUnitOfMeasureByIdQuery(id);
+        var result = await _mediator.Send(query);
 
         if (result.IsSuccess)
-        {
-            return Ok(new { success = true, data = result.Value });
-        }
+            return ApiOk(result);
 
-        return result.FirstToActionResult(this);
+        return FirstErrorToActionResult(result.Errors);
     }
 
-    /// <summary>
-    /// Create new unit of measure (admin only)
-    /// </summary>
     [HttpPost]
-    [ProducesResponseType(typeof(object), 201)]
-    [ProducesResponseType(typeof(object), 400)]
-    public async Task<IActionResult> CreateUnitOfMeasure([FromBody] CreateUnitOfMeasureRequest request)
+    public async Task<IActionResult> CreateUnitOfMeasure([FromBody] CreateUnitOfMeasureDto request)
     {
-        var result = await _unitService.CreateUnitAsync(request);
+        var command = new CreateUnitOfMeasureCommand(request);
+        var result = await _mediator.Send(command);
 
         if (result.IsSuccess)
         {
             return CreatedAtAction(
                 nameof(GetUnitOfMeasure),
+                "UnitsOfMeasure",
                 new { id = result.Value.Id },
-                new { success = true, data = result.Value }
+                result.Value
             );
         }
 
-        return result.FirstToActionResult(this);
+        return FirstErrorToActionResult(result.Errors);
     }
 
-    /// <summary>
-    /// Update unit of measure
-    /// </summary>
     [HttpPut("{id}")]
-    [ProducesResponseType(typeof(object), 200)]
-    [ProducesResponseType(typeof(object), 400)]
-    [ProducesResponseType(typeof(object), 404)]
-    public async Task<IActionResult> UpdateUnitOfMeasure(int id, [FromBody] UpdateUnitOfMeasureRequest request)
+    public async Task<IActionResult> UpdateUnitOfMeasure(Guid id, [FromBody] UpdateUnitOfMeasureDto request)
     {
-        var result = await _unitService.UpdateUnitAsync(id, request);
+        var command = new UpdateUnitOfMeasureCommand(id, request);
+        var result = await _mediator.Send(command);
 
         if (result.IsSuccess)
-        {
-            return Ok(new { success = true, data = result.Value });
-        }
+            return ApiOk(result);
 
-        return result.FirstToActionResult(this);
+        return FirstErrorToActionResult(result.Errors);
     }
 
-    /// <summary>
-    /// Delete unit of measure
-    /// </summary>
     [HttpDelete("{id}")]
-    [ProducesResponseType(204)]
-    [ProducesResponseType(typeof(object), 400)]
-    [ProducesResponseType(typeof(object), 404)]
     public async Task<IActionResult> DeleteUnitOfMeasure(int id)
     {
-        var result = await _unitService.DeleteUnitAsync(id);
+        var command = new DeleteUnitOfMeasureCommand(id);
+        var result = await _mediator.Send(command);
 
         if (result.IsSuccess)
-        {
             return NoContent();
-        }
 
-        return result.FirstToActionResult(this);
+        return FirstErrorToActionResult(result.Errors);
     }
 }

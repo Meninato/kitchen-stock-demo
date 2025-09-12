@@ -1,4 +1,4 @@
-﻿using KitchenStock.Application.Abstractions;
+﻿using KitchenStock.Application.Modules.Ingredients.Abstractions;
 using KitchenStock.Domain.Entities;
 using KitchenStock.Domain.Enums;
 using KitchenStock.Infrastructure.Persistence;

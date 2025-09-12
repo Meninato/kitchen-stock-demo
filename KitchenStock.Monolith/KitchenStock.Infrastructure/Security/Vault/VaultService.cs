@@ -1,6 +1,4 @@
-﻿using KitchenStock.Application.Abstractions;
-using KitchenStock.Infrastructure.Security.Vault.Configuration;
-using Microsoft.Extensions.Options;
+﻿using KitchenStock.Application.Security.Vault.Abstractions;
 using System.Text;
 using System.Text.Json;
 

@@ -3,6 +3,7 @@ using KitchenStock.Application.Modules.Ingredients.Abstractions;
 using KitchenStock.Application.Modules.Ingredients.Dtos;
 using KitchenStock.Application.Modules.Ingredients.Results;
 using KitchenStock.Application.Modules.Kitchen.Abstractions;
+using KitchenStock.Application.Modules.Stock.Abstractions;
 using KitchenStock.Domain.Entities;
 using KitchenStock.Domain.Enums;
 

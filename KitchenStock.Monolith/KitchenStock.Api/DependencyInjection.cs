@@ -5,6 +5,7 @@ using KitchenStock.Application.Modules.Stock.Abstractions;
 using KitchenStock.Application.Modules.UnitOfMeasure.Abstractions;
 using KitchenStock.Application.Modules.User.Abstractions;
 using KitchenStock.Application.Security.Vault.Abstractions;
+using KitchenStock.Infrastructure.Configuration;
 using KitchenStock.Infrastructure.Modules.Auth.Services;
 using KitchenStock.Infrastructure.Modules.Ingredients.Repositories;
 using KitchenStock.Infrastructure.Modules.Ingredients.Services;
@@ -31,14 +32,17 @@ public static class DependencyInjection
         services.AddDbContext<KitchenStockDbContext>((sp, options) =>
         {
             var vault = sp.GetRequiredService<IVaultService>();
-            var vaultConString = vault.ReadSecretAsync<VaultDbConnectionString>("kitchen/services/user/db/dev")
+            var config = sp.GetRequiredService<IOptions<KitchenStockSettings>>();
+            var dbSecretPath = config.Value.VaultSecretPaths.Database.ConnectionString;
+
+            var dbConnectionString = vault.ReadSecretValueAsync(dbSecretPath)
                 .GetAwaiter()
                 .GetResult();
 
-            if (vaultConString is null || string.IsNullOrEmpty(vaultConString.ConnectionString))
+            if (string.IsNullOrEmpty(dbConnectionString))
                 throw new InvalidOperationException("Database connection string is missing in Vault");
 
-            options.UseNpgsql(vaultConString.ConnectionString);
+            options.UseNpgsql(dbConnectionString);
         });
         return services;
     }

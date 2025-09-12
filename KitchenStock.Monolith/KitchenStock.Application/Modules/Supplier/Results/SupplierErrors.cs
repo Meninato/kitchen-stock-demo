@@ -44,10 +44,22 @@ public static class SupplierErrors
                 .WithMetadata("Email", email)
                 .WithMetadata("Type", "Validation");
 
-        public static Error AddressTooLong(int maxLength) =>
-            new Error($"Address must not exceed {maxLength} characters")
-                .WithMetadata("ErrorCode", "SUPPLIER_ADDRESS_TOO_LONG")
-                .WithMetadata("Field", "Address")
+        public static Error AddressTooLong(string addressField, int maxLength) =>
+            new Error($"{addressField} must not exceed {maxLength} characters")
+                .WithMetadata("ErrorCode", $"SUPPLIER_ADDRESS_{addressField.ToUpper()}_TOO_LONG")
+                .WithMetadata("Field", addressField)
+                .WithMetadata("Type", "Validation");
+
+        public static Error InvalidAddressLatitude(double latitude) =>
+            new Error($"Address latitude '{latitude}' is invalid")
+                .WithMetadata("ErrorCode", $"SUPPLIER_INVALID_ADDRESS_LATITUDE")
+                .WithMetadata("Field", "Latitude")
+                .WithMetadata("Type", "Validation");
+
+        public static Error InvalidAddressLongitude(double longitude) =>
+            new Error($"Address longitude '{longitude}' is invalid")
+                .WithMetadata("ErrorCode", $"SUPPLIER_INVALID_ADDRESS_LONGITUDE")
+                .WithMetadata("Field", "Longitude")
                 .WithMetadata("Type", "Validation");
     }
 

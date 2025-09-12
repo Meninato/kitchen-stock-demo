@@ -1,4 +1,4 @@
-﻿namespace KitchenStock.Api.Models;
+﻿namespace KitchenStock.Api.Dtos;
 
 public class ApiResponse<T>
 {

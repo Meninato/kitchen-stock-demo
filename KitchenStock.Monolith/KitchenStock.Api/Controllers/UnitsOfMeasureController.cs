@@ -75,7 +75,7 @@ public class UnitsOfMeasureController : ApiControllerBase
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteUnitOfMeasure(int id)
+    public async Task<IActionResult> DeleteUnitOfMeasure(Guid id)
     {
         var command = new DeleteUnitOfMeasureCommand(id);
         var result = await _mediator.Send(command);

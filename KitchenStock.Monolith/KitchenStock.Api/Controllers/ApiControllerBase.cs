@@ -1,5 +1,5 @@
 ﻿using FluentResults;
-using KitchenStock.Api.Models;
+using KitchenStock.Api.Dtos;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.JsonWebTokens;
 

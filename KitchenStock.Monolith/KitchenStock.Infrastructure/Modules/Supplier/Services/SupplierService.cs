@@ -37,23 +37,32 @@ public class SupplierService : ISupplierService
             if (await _supplierRepository.ExistsInKitchenAsync(request.Name, request.KitchenId))
                 return SupplierResult.Failure(SupplierErrors.BusinessRules.AlreadyExistsInKitchen(request.Name, request.KitchenId));
 
-            if (!string.IsNullOrWhiteSpace(request.Email) &&
-                await _supplierRepository.EmailExistsInKitchenAsync(request.Email, request.KitchenId))
-                return SupplierResult.Failure(SupplierErrors.BusinessRules.EmailAlreadyUsedInKitchen(request.Email, request.KitchenId));
+            if(request.Contact is not null)
+            {
+                if (!string.IsNullOrWhiteSpace(request.Contact.Email) &&
+                    await _supplierRepository.EmailExistsInKitchenAsync(request.Contact.Email, request.KitchenId))
+                    return SupplierResult.Failure(SupplierErrors.BusinessRules.EmailAlreadyUsedInKitchen(request.Contact.Email, request.KitchenId));
 
-            if (!string.IsNullOrWhiteSpace(request.Phone) &&
-                await _supplierRepository.PhoneExistsInKitchenAsync(request.Phone, request.KitchenId))
-                return SupplierResult.Failure(SupplierErrors.BusinessRules.PhoneAlreadyUsedInKitchen(request.Phone, request.KitchenId));
+                if (!string.IsNullOrWhiteSpace(request.Contact.Phone) &&
+                    await _supplierRepository.PhoneExistsInKitchenAsync(request.Contact.Phone, request.KitchenId))
+                    return SupplierResult.Failure(SupplierErrors.BusinessRules.PhoneAlreadyUsedInKitchen(request.Contact.Phone, request.KitchenId));
+            }
 
             var supplier = new SupplierEntity
             {
                 Name = request.Name.Trim(),
                 SupplierContact = new Contact(
-                    request.Email?.Trim() ?? string.Empty,
-                    request.Phone?.Trim() ?? string.Empty
+                    request.Contact?.Email?.Trim() ?? string.Empty,
+                    request.Contact?.Phone?.Trim() ?? string.Empty
                 ),
                 SupplierAddress = new Address(
-                    
+                    request.Address?.Street?.Trim() ?? string.Empty,
+                    request.Address?.City?.Trim() ?? string.Empty,
+                    request.Address?.State?.Trim() ?? string.Empty,
+                    request.Address?.PostalCode?.Trim() ?? string.Empty,
+                    request.Address?.Country?.Trim() ?? string.Empty,
+                    request.Address?.Latitude ?? 0,
+                    request.Address?.Longitude ?? 0
                 ),
                 KitchenId = request.KitchenId
             };
@@ -70,7 +79,7 @@ public class SupplierService : ISupplierService
         }
     }
 
-    public async Task<SupplierResult> GetSupplierByIdAsync(int id, int userId)
+    public async Task<SupplierResult> GetSupplierByIdAsync(Guid id, Guid userId)
     {
         try
         {
@@ -90,7 +99,7 @@ public class SupplierService : ISupplierService
         }
     }
 
-    public async Task<SupplierListResult> GetKitchenSuppliersAsync(int kitchenId, int userId)
+    public async Task<SupplierListResult> GetKitchenSuppliersAsync(Guid kitchenId, Guid userId)
     {
         try
         {
@@ -108,7 +117,7 @@ public class SupplierService : ISupplierService
         }
     }
 
-    public async Task<SupplierResult> UpdateSupplierAsync(int id, int userId, UpdateSupplierRequest request)
+    public async Task<SupplierResult> UpdateSupplierAsync(Guid id, Guid userId, UpdateSupplierDto request)
     {
         try
         {
@@ -134,10 +143,11 @@ public class SupplierService : ISupplierService
                 await _supplierRepository.PhoneExistsInKitchenAsync(request.Phone, supplier.KitchenId, id))
                 return SupplierResult.Failure(SupplierErrors.BusinessRules.PhoneAlreadyUsedInKitchen(request.Phone, supplier.KitchenId));
 
+            //TODO: adjust this part of the address and contact
             supplier.Name = request.Name.Trim();
-            supplier.Phone = request.Phone?.Trim() ?? string.Empty;
-            supplier.Email = request.Email?.Trim() ?? string.Empty;
-            supplier.Address = request.Address?.Trim() ?? string.Empty;
+            //supplier.Phone = request.Phone?.Trim() ?? string.Empty;
+            //supplier.Email = request.Email?.Trim() ?? string.Empty;
+            //supplier.Address = request.Address?.Trim() ?? string.Empty;
 
             var updatedSupplier = await _supplierRepository.UpdateAsync(supplier);
             var response = MapToResponse(updatedSupplier);
@@ -150,7 +160,7 @@ public class SupplierService : ISupplierService
         }
     }
 
-    public async Task<SupplierResult> DeleteSupplierAsync(int id, int userId)
+    public async Task<SupplierResult> DeleteSupplierAsync(Guid id, Guid userId)
     {
         try
         {
@@ -168,8 +178,7 @@ public class SupplierService : ISupplierService
             if (!success)
                 return SupplierResult.Failure(SupplierErrors.DatabaseError("supplier deletion"));
 
-            var emptyResponse = new SupplierResponse(id, "", "", "", "", 0, 0, null, DateTime.MinValue);
-            return SupplierResult.Success(emptyResponse);
+            return SupplierResult.Success();
         }
         catch (Exception ex)
         {
@@ -177,7 +186,7 @@ public class SupplierService : ISupplierService
         }
     }
 
-    public async Task<SupplierPerformanceResult> GetSupplierPerformanceAsync(int supplierId, int userId, DateTime? fromDate = null)
+    public async Task<SupplierPerformanceResult> GetSupplierPerformanceAsync(Guid supplierId, Guid userId, DateTime? fromDate = null)
     {
         try
         {
@@ -191,7 +200,7 @@ public class SupplierService : ISupplierService
             var stockEntries = supplier.StockEntries?
                 .Where(se => se.MovementType == StockMovementType.Purchase && se.UnitPrice.HasValue)
                 .Where(se => !fromDate.HasValue || se.MovementDate >= fromDate.Value)
-                .ToList() ?? new List<StockEntry>();
+                .ToList() ?? new List<StockEntryEntity>();
 
             var totalPurchases = stockEntries.Count;
             var totalValue = stockEntries.Sum(se => se.Quantity * se.UnitPrice!.Value);
@@ -202,7 +211,7 @@ public class SupplierService : ISupplierService
             // Monthly breakdown
             var monthlyBreakdown = stockEntries
                 .GroupBy(se => se.MovementDate.ToString("yyyy-MM"))
-                .Select(g => new MonthlyPurchaseSummary(
+                .Select(g => new MonthlyPurchaseSummaryDto(
                     g.Key,
                     g.Count(),
                     g.Sum(se => se.Quantity * se.UnitPrice!.Value)
@@ -213,7 +222,7 @@ public class SupplierService : ISupplierService
             // Top ingredients
             var topIngredients = stockEntries
                 .GroupBy(se => se.Ingredient)
-                .Select(g => new IngredientPurchaseSummary(
+                .Select(g => new IngredientPurchaseSummaryDto(
                     g.Key.Name,
                     g.Sum(se => se.Quantity),
                     g.Key.UnitOfMeasure?.Symbol ?? "UN",
@@ -224,7 +233,7 @@ public class SupplierService : ISupplierService
                 .Take(10)
                 .ToList();
 
-            var performance = new SupplierPerformanceResponse(
+            var performance = new SupplierPerformanceResponseDto(
                 supplier.Id,
                 supplier.Name,
                 totalPurchases,
@@ -244,7 +253,7 @@ public class SupplierService : ISupplierService
         }
     }
 
-    public async Task<SupplierListResult> SearchSuppliersAsync(string searchTerm, int kitchenId, int userId)
+    public async Task<SupplierListResult> SearchSuppliersAsync(string searchTerm, Guid kitchenId, Guid userId)
     {
         try
         {
@@ -292,12 +301,39 @@ public class SupplierService : ISupplierService
 
         if(request.Address is not null)
         {
-            if (!string.IsNullOrEmpty(request.Address) && request.Address.Length > 200)
-                errors.Add(SupplierErrors.Validation.AddressTooLong(200));
+            if (!string.IsNullOrEmpty(request.Address.Street) && request.Address.Street.Length > 255)
+                errors.Add(SupplierErrors.Validation.AddressTooLong(nameof(request.Address.Street), 255));
+
+            if (!string.IsNullOrEmpty(request.Address.City) && request.Address.City.Length > 100)
+                errors.Add(SupplierErrors.Validation.AddressTooLong(nameof(request.Address.City),100));
+
+            if (!string.IsNullOrEmpty(request.Address.State) && request.Address.State.Length > 100)
+                errors.Add(SupplierErrors.Validation.AddressTooLong(nameof(request.Address.State),100));
+
+            if (!string.IsNullOrEmpty(request.Address.PostalCode) && request.Address.PostalCode.Length > 20)
+                errors.Add(SupplierErrors.Validation.AddressTooLong(nameof(request.Address.PostalCode), 20));
+
+            if (!string.IsNullOrEmpty(request.Address.Country) && request.Address.Country.Length > 100)
+                errors.Add(SupplierErrors.Validation.AddressTooLong(nameof(request.Address.Country),100));
+
+            if (request.Address.Latitude.HasValue && !IsValidLatitude(request.Address.Latitude.Value))
+                errors.Add(SupplierErrors.Validation.InvalidAddressLatitude(request.Address.Latitude.Value));
+
+            if (request.Address.Longitude.HasValue && !IsValidLongitude(request.Address.Longitude.Value))
+                errors.Add(SupplierErrors.Validation.InvalidAddressLongitude(request.Address.Longitude.Value));
         }
 
         return errors.Any() ? Result.Fail(errors) : Result.Ok();
     }
+
+    private bool IsValidLatitude(double latitude) =>
+    latitude >= -90 && latitude <= 90;
+
+    private bool IsValidLongitude(double longitude) =>
+        longitude >= -180 && longitude <= 180;
+
+    private bool IsValidCoordinate(double latitude, double longitude) =>
+        IsValidLatitude(latitude) && IsValidLongitude(longitude);
 
     private Result ValidateUpdateSupplierRequest(UpdateSupplierDto request)
     {
@@ -316,16 +352,16 @@ public class SupplierService : ISupplierService
                 errors.Add(SupplierErrors.Validation.InvalidPhoneFormat(request.Phone));
         }
 
-        if (!string.IsNullOrEmpty(request.Email))
-        {
-            if (request.Email.Length > 100)
-                errors.Add(SupplierErrors.Validation.EmailTooLong(100));
-            else if (!IsValidEmail(request.Email))
-                errors.Add(SupplierErrors.Validation.InvalidEmailFormat(request.Email));
-        }
+        //if (!string.IsNullOrEmpty(request.Email))
+        //{
+        //    if (request.Email.Length > 100)
+        //        errors.Add(SupplierErrors.Validation.EmailTooLong(100));
+        //    else if (!IsValidEmail(request.Email))
+        //        errors.Add(SupplierErrors.Validation.InvalidEmailFormat(request.Email));
+        //}
 
-        if (!string.IsNullOrEmpty(request.Address) && request.Address.Length > 200)
-            errors.Add(SupplierErrors.Validation.AddressTooLong(200));
+        //if (!string.IsNullOrEmpty(request.Address) && request.Address.Length > 200)
+        //    errors.Add(SupplierErrors.Validation.AddressTooLong(200));
 
         return errors.Any() ? Result.Fail(errors) : Result.Ok();
     }

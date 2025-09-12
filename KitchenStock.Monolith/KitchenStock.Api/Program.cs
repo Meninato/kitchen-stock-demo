@@ -3,6 +3,7 @@ using KitchenStock.Api.Conventions;
 using KitchenStock.Api.Middlewares;
 using KitchenStock.Api.Transformers;
 using KitchenStock.Application.Modules.Auth.Abstractions;
+using KitchenStock.Infrastructure.Configuration;
 using KitchenStock.Infrastructure.Persistence;
 using System.Text.Json;
 
@@ -26,8 +27,9 @@ builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssembly(typeof(IAuthService).Assembly)
 );
 
+builder.Services.Configure<KitchenStockSettings>(builder.Configuration.GetSection(KitchenStockSettings.KITCHENSTOCK_SECTION));
 builder.Services.AddKitchenStockDbContext();
-builder.Services.AddKitchenStockServices();
+builder.Services.AddKitchenStockServices(builder.Configuration);
 
 builder.Services.AddCors(options =>
 {

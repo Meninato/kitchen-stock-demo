@@ -75,7 +75,7 @@ public class SuppliersController : ApiControllerBase
 
         if (result.IsSuccess)
         {
-            return CreatedAtAction(
+            return ApiCreatedAtAction(
                 nameof(GetSupplier),
                 "Suppliers",
                 new { id = result.Value.Id },

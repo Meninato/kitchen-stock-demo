@@ -21,7 +21,7 @@ public class AuthController : ApiControllerBase
         var result = await _mediator.Send(command);
 
         if (result.IsSuccess)
-            return Ok(result);
+            return ApiOk(result);
 
         return FirstErrorToActionResult(result.Errors);
     }

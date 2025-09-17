@@ -20,8 +20,10 @@ public class UsersController : ApiControllerBase
     }
 
     [HttpPost("register")]
-    public async Task<IActionResult> Register([FromBody] RegisterUserCommand command)
+    public async Task<IActionResult> Register([FromBody] RegisterUserDto request)
     {
+        //always register the user as basic plan
+        var command = new RegisterUserCommand(request.Name, request.Email, request.Password);
         var result = await _mediator.Send(command);
 
         if (result.IsSuccess)

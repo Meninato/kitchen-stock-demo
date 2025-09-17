@@ -1,7 +1,9 @@
 ﻿using KitchenStock.Application.Modules.Auth.Abstractions;
 using KitchenStock.Application.Modules.Ingredients.Abstractions;
 using KitchenStock.Application.Modules.Kitchen.Abstractions;
+using KitchenStock.Application.Modules.Recipe.Abstractions;
 using KitchenStock.Application.Modules.Stock.Abstractions;
+using KitchenStock.Application.Modules.Supplier.Abstractions;
 using KitchenStock.Application.Modules.UnitOfMeasure.Abstractions;
 using KitchenStock.Application.Modules.User.Abstractions;
 using KitchenStock.Application.Security.Vault.Abstractions;
@@ -11,8 +13,12 @@ using KitchenStock.Infrastructure.Modules.Ingredients.Repositories;
 using KitchenStock.Infrastructure.Modules.Ingredients.Services;
 using KitchenStock.Infrastructure.Modules.Kitchen.Repositories;
 using KitchenStock.Infrastructure.Modules.Kitchen.Services;
+using KitchenStock.Infrastructure.Modules.Recipe.Repositories;
+using KitchenStock.Infrastructure.Modules.Recipe.Services;
 using KitchenStock.Infrastructure.Modules.Stock.Repositories;
 using KitchenStock.Infrastructure.Modules.Stock.Services;
+using KitchenStock.Infrastructure.Modules.Supplier.Repositories;
+using KitchenStock.Infrastructure.Modules.Supplier.Services;
 using KitchenStock.Infrastructure.Modules.UnitOfMeasure.Repositories;
 using KitchenStock.Infrastructure.Modules.UnitOfMeasure.Services;
 using KitchenStock.Infrastructure.Modules.User.Repositories;
@@ -62,6 +68,8 @@ public static class DependencyInjection
         services.AddScoped<IIngredientRepository, IngredientRepository>();
         services.AddScoped<IStockEntryRepository, StockEntryRepository>();
         services.AddScoped<IUnitOfMeasureRepository, UnitOfMeasureRepository>();
+        services.AddScoped<ISupplierRepository, SupplierRepository>();
+        services.AddScoped<IRecipeRepository, RecipeRepository>();
 
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IAuthService, AuthService>();
@@ -69,6 +77,8 @@ public static class DependencyInjection
         services.AddScoped<IIngredientService, IngredientService>();
         services.AddScoped<IStockEntryService, StockEntryService>();
         services.AddScoped<IUnitOfMeasureService, UnitOfMeasureService>();
+        services.AddScoped<ISupplierService, SupplierService>();
+        services.AddScoped<IRecipeService, RecipeService>();
 
         return services;
     }

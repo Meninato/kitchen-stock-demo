@@ -7,10 +7,10 @@ import {
 import {
   CreateUnitOfMeasureDto,
   UnitOfMeasure,
-} from "@/lib/api/unit-of-measure/types";
-import { unitOfMeasureEndpoints } from "@/lib/api/unit-of-measure/endpoint";
-import { ApiError } from "@/lib/api/client";
-import { unitOfMeasureKeys } from "../queries/useUnitsOfMeasure";
+} from "@/modules/unit-of-measure/api/types";
+import { unitOfMeasureEndpoints } from "@/modules/unit-of-measure/api/endpoint";
+import { ApiError } from "@/lib/api-client";
+import { unitOfMeasureKeys } from "../queries/query-keys";
 
 export const useCreateUnitOfMeasure = (
   options?: Omit<
@@ -22,9 +22,11 @@ export const useCreateUnitOfMeasure = (
 
   return useMutation({
     mutationFn: unitOfMeasureEndpoints.createUnitOfMeasure,
-    onSuccess: (data, variables, onMutateResult, context) => {
+    onSuccess: async (data, variables, onMutateResult, context) => {
       // Invalidate and refetch unit of measure list
-      queryClient.invalidateQueries({ queryKey: unitOfMeasureKeys.lists() });
+      await queryClient.invalidateQueries({
+        queryKey: unitOfMeasureKeys.lists(),
+      });
 
       // Optionally add the new unit of measure to cache immediately
       queryClient.setQueryData(unitOfMeasureKeys.detail(data.id), data);
@@ -32,7 +34,7 @@ export const useCreateUnitOfMeasure = (
       // Call custom onSuccess if provided
       options?.onSuccess?.(data, variables, onMutateResult, context);
     },
-    onError: (error, variables, onMudateResult, context) => {
+    onError: async (error, variables, onMudateResult, context) => {
       // Call custom onError if provided
       options?.onError?.(error, variables, onMudateResult, context);
     },

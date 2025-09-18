@@ -32,11 +32,11 @@ builder.Services.AddControllers(
             var response = new InvalidModelStateResponse(actionContext.ModelState);
             return new BadRequestObjectResult(new
             {
-                response.Message,
-                Errors = response.Errors.Select(e => new
+                message = response.Message,
+                errors = response.Errors.Select(e => new
                 {
-                    e.Message,
-                    e.Metadata
+                    message = e.Message,
+                    metadata = e.Metadata
                 }).ToList()
             });
         };
@@ -51,7 +51,7 @@ builder.Services.AddMediatR(cfg =>
 builder.Services.Configure<KitchenStockSettings>(builder.Configuration.GetSection(KitchenStockSettings.KITCHENSTOCK_SECTION));
 builder.Services.AddKitchenStockDbContext();
 builder.Services.AddKitchenStockServices(builder.Configuration);
-builder.Services.AddJwtAuthentication();
+await builder.Services.AddJwtAuthenticationAsync();
 
 builder.Services.AddCors(options =>
 {
@@ -71,6 +71,7 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+app.UseMiddleware<MediaTypeResponseMiddleware>();
 app.UseMiddleware<GlobalExceptionMiddleware>();
 
 app.UseHttpsRedirection();

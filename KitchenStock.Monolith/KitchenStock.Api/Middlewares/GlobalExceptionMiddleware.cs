@@ -38,13 +38,10 @@ public class GlobalExceptionMiddleware
         var response = new
         {
             message = "An internal server error occurred",
-            metadata = new[]
+            metadata = new
             {
-                new
-                {
-                    ErrorCode = "INTERNAL_SERVER_ERROR",
-                    Type = "Internal"
-                }
+                error_code = "INTERNAL_SERVER_ERROR",
+                type = "Internal"
             }
         };
 

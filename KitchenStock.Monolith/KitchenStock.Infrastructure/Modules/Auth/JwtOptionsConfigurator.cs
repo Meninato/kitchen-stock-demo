@@ -8,7 +8,7 @@ using System.Text;
 
 namespace KitchenStock.Infrastructure.Modules.Auth;
 
-public class JwtOptionsConfigurator : IConfigureOptions<JwtBearerOptions>
+public class JwtOptionsConfigurator : IPostConfigureOptions<JwtBearerOptions>
 {
     private readonly IVaultService _vault;
     private readonly JwtTokenVaultPathSettings _jwtTokenVaultPath;
@@ -19,25 +19,32 @@ public class JwtOptionsConfigurator : IConfigureOptions<JwtBearerOptions>
         _jwtTokenVaultPath = config.Value.VaultSecretPaths.JwtToken;
     }
 
-    public void Configure(JwtBearerOptions options)
+    public async void PostConfigure(string? name, JwtBearerOptions options)
     {
-        var vaultJwt = _vault.ReadSecretAsync<VaultJwtTokenDto>(_jwtTokenVaultPath.Config)
-            .GetAwaiter()
-            .GetResult();
-
-        if (vaultJwt is null || string.IsNullOrEmpty(vaultJwt.Secret))
-            throw new InvalidOperationException("Jwt is missing in Vault");
-
-        options.TokenValidationParameters = new TokenValidationParameters
+        try
         {
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(vaultJwt.Secret)),
-            ValidateIssuer = true,
-            ValidIssuer = vaultJwt.Issuer,
-            ValidateAudience = true,
-            ValidAudience = vaultJwt.Audience,
-            ValidateLifetime = true,
-            ClockSkew = TimeSpan.Zero
-        };
+            var vaultJwt = await _vault.ReadSecretAsync<VaultJwtTokenDto>(_jwtTokenVaultPath.Config);
+                //.GetAwaiter()
+                //.GetResult();
+
+            if (vaultJwt is null || string.IsNullOrEmpty(vaultJwt.Secret))
+                throw new InvalidOperationException("JWT configuration is missing in Vault");
+
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(vaultJwt.Secret)),
+                ValidateIssuer = true,
+                ValidIssuer = vaultJwt.Issuer,
+                ValidateAudience = true,
+                ValidAudience = vaultJwt.Audience,
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.Zero
+            };
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException("Failed to configure JWT options from Vault", ex);
+        }
     }
 }

@@ -1,7 +1,9 @@
 ﻿using FluentResults;
 using KitchenStock.Api.Dtos;
+using KitchenStock.Api.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.JsonWebTokens;
+using System.Security.Claims;
 
 namespace KitchenStock.Api.Controllers;
 
@@ -11,7 +13,10 @@ public class ApiControllerBase : ControllerBase
     {
         get
         {
-            var claim = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+            var claim =
+                User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value ??
+                User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
             if (Guid.TryParse(claim, out var userId))
                 return userId;
 
@@ -37,7 +42,7 @@ public class ApiControllerBase : ControllerBase
 
     protected IActionResult ErrorToActionResult(IError error)
     {
-        var data = new { error.Message, error.Metadata };
+        var data = new { message = error.Message, metadata = error.Metadata.ToSnakeCaseKeys() };
 
         return error.Metadata.TryGetValue("Type", out var type) ? type switch
         {

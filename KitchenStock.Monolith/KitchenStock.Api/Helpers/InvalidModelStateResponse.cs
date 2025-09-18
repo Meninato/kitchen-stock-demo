@@ -23,9 +23,9 @@ public class InvalidModelStateResponse
                 foreach (var subError in error.Value)
                 {
                     var fluentError = new Error(subError)
-                        .WithMetadata("ErrorCode", GenerateErrorCode(error.Key, subError))
-                        .WithMetadata("Field", error.Key)
-                        .WithMetadata("Type", "Validation");
+                        .WithMetadata("error_code", GenerateErrorCode(error.Key, subError))
+                        .WithMetadata("field", error.Key)
+                        .WithMetadata("type", "Validation");
 
                     Errors.Add(fluentError);
                 }

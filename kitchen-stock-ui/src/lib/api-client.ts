@@ -41,7 +41,7 @@ class ApiClient {
   private client: AxiosInstance;
   private isRefreshing = false;
   private failedQueue: Array<{
-    resolve: (token: string) => void;
+    resolve: (result: unknown) => void;
     reject: (error: unknown) => void;
   }> = [];
 
@@ -61,13 +61,7 @@ class ApiClient {
   private setupInterceptors(): void {
     // Request interceptor
     this.client.interceptors.request.use(
-      (config) => {
-        // Add auth token if available
-        const token = this.getAuthToken();
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
-        }
-
+      async (config) => {
         // Add correlation ID for distributed tracing
         config.headers["X-Correlation-Id"] = this.generateCorrelationId();
 
@@ -100,7 +94,7 @@ class ApiClient {
           _retry?: boolean;
         };
 
-        // Handle 401 Unauthorized
+        //Handle 401 Unauthorized
         if (error.response?.status === 401 && !originalRequest._retry) {
           if (this.isRefreshing) {
             return new Promise((resolve, reject) => {
@@ -115,13 +109,17 @@ class ApiClient {
           this.isRefreshing = true;
 
           try {
-            const newToken = await this.refreshToken();
-            this.processQueue(null, newToken);
-            originalRequest.headers!.Authorization = `Bearer ${newToken}`;
+            await this.refreshTokens();
+            this.processQueue(null);
+
             return this.client(originalRequest);
           } catch (refreshError) {
-            this.processQueue(refreshError, null);
-            this.handleAuthError();
+            this.processQueue(refreshError);
+
+            if (typeof window !== "undefined") {
+              window.location.href = "/login";
+            }
+
             throw refreshError;
           } finally {
             this.isRefreshing = false;
@@ -134,12 +132,17 @@ class ApiClient {
     );
   }
 
-  private processQueue(error: unknown, token: string | null = null): void {
+  private async refreshTokens(): Promise<void> {
+    const response = await this.client.post("/auth/refresh");
+    return response.data;
+  }
+
+  private processQueue(error: unknown, result: unknown = null): void {
     this.failedQueue.forEach((prom) => {
       if (error) {
         prom.reject(error);
       } else {
-        prom.resolve(token!);
+        prom.resolve(result);
       }
     });
 
@@ -158,56 +161,48 @@ class ApiClient {
     }
 
     if (error.request) {
+      const sslError = this.checkSslCertificateError(error);
+      if (sslError) {
+        return sslError;
+      }
+
       return new ApiError<T>(
         "Network error. Please check your connection.",
         0,
-        { errorCode: "NETWORK_ERROR", type: "Infrastructure" } as T
+        { error_code: "NETWORK_ERROR", type: "Infrastructure" } as T
       );
     }
 
     return new ApiError<T>(error.message || "An unexpected error occurred", 0, {
-      errorCode: "UNEXPECTED_ERROR",
+      error_code: "UNEXPECTED_ERROR",
       type: "Infrastructure",
     } as T);
   }
 
-  private getAuthToken(): string | null {
-    // Get from localStorage or cookie
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("access_token");
-    }
-    return null;
-  }
-
-  private async refreshToken(): Promise<string> {
-    try {
-      const response = await this.post<{
-        accessToken: string;
-        refreshToken: string;
-      }>("/auth/refresh", {
-        refreshToken: localStorage.getItem("refresh_token"),
-      });
-
-      localStorage.setItem("access_token", response.data.accessToken);
-      localStorage.setItem("refresh_token", response.data.refreshToken);
-
-      return response.data.accessToken;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  private handleAuthError(): void {
-    // Clear tokens and redirect to login
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("access_token");
-      localStorage.removeItem("refresh_token");
-      window.location.href = "/login";
+  private checkSslCertificateError<T = Record<string, string>>(
+    error: AxiosError<ApiErrorResponse<T>>
+  ): ApiError<T> | undefined {
+    if (
+      error.code === "DEPTH_ZERO_SELF_SIGNED_CERT" ||
+      error.code === "UNABLE_TO_VERIFY_LEAF_SIGNATURE" ||
+      error.code === "SELF_SIGNED_CERT_IN_CHAIN"
+    ) {
+      return new ApiError<T>(
+        "SSL Certificate error. The API is using a self-signed certificate.",
+        0,
+        {
+          error_code: "SSL_CERTIFICATE_ERROR",
+          type: "Infrastructure",
+          ssl_error: error.code,
+          suggestion:
+            "Accept the certificate or configure the API for development",
+        } as T
+      );
     }
   }
 
   private generateCorrelationId(): string {
-    return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
   }
 
   // HTTP methods

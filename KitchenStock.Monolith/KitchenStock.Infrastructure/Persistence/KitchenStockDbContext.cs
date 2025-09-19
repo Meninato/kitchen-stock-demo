@@ -6,6 +6,7 @@ namespace KitchenStock.Infrastructure.Persistence;
 public class KitchenStockDbContext : BaseDbContext
 {
     public DbSet<UserEntity> Users { get; set; }
+    public DbSet<RefreshTokenEntity> RefreshTokens { get; set; }
     public DbSet<KitchenEntity> Kitchens { get; set; }
     public DbSet<IngredientEntity> Ingredients { get; set; }
     public DbSet<RecipeEntity> Recipes { get; set; }
@@ -19,6 +20,7 @@ public class KitchenStockDbContext : BaseDbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         ConfigureUsers(modelBuilder);
+        ConfigureRefreshTokens(modelBuilder);
         ConfigureKitchens(modelBuilder);
         ConfigureIngredients(modelBuilder);
         ConfigureRecipes(modelBuilder);
@@ -51,6 +53,39 @@ public class KitchenStockDbContext : BaseDbContext
             entity.Property(u => u.Plan)
                 .IsRequired()
                 .HasConversion<string>();
+        });
+    }
+
+    private void ConfigureRefreshTokens(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<RefreshTokenEntity>(entity =>
+        {
+            entity.HasKey(rt => rt.Id);
+
+            entity.Property(rt => rt.TokenHash)
+                .IsRequired()
+                .HasMaxLength(500);
+
+            entity.Property(rt => rt.IpAddress)
+                .HasMaxLength(45); // IPv6 support
+
+            entity.Property(rt => rt.UserAgent)
+                .HasMaxLength(500);
+
+            entity.Property(rt => rt.RevokedReason)
+                .HasMaxLength(200);
+
+            entity.Property(rt => rt.ReplacedByToken)
+                .HasMaxLength(500);
+
+            entity.HasIndex(rt => rt.TokenHash).IsUnique();
+            entity.HasIndex(rt => rt.UserId);
+            entity.HasIndex(rt => rt.ExpiresAt);
+
+            entity.HasOne(rt => rt.User)
+                .WithMany()
+                .HasForeignKey(rt => rt.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 

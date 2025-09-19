@@ -2,6 +2,6 @@
 
 public record AuthResponseDto(
     string AccessToken,
-    string RefreshToken,
-    DateTime ExpiresAt
+    DateTime AccessTokenUtcExpiresAt,
+    string RefreshToken
 );

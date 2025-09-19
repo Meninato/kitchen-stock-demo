@@ -57,7 +57,8 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", builder =>
     {
-        builder.AllowAnyOrigin()
+        builder.WithOrigins("http://localhost:3000")
+               .AllowCredentials()
                .AllowAnyMethod()
                .AllowAnyHeader();
     });
@@ -65,16 +66,18 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+
+}
+
+if (app.Environment.IsProduction())
+{
+    app.UseHttpsRedirection();
 }
 
 app.UseMiddleware<MediaTypeResponseMiddleware>();
 app.UseMiddleware<GlobalExceptionMiddleware>();
-
-app.UseHttpsRedirection();
 
 app.UseCors("AllowAll");
 app.UseAuthentication();

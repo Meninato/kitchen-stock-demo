@@ -17,7 +17,7 @@ public class AuthenticateUserHandler : IRequestHandler<AuthenticateUserCommand, 
 
     public async Task<AuthResult> Handle(AuthenticateUserCommand request, CancellationToken cancellationToken)
     {
-        return await _authService.AuthenticateAsync(MapToDto(request));
+        return await _authService.AuthenticateAsync(MapToDto(request), request.IpAddress, request.UserAgent);
     }
 
     private AuthenticateUserDto MapToDto(AuthenticateUserCommand command)

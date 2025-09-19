@@ -4,7 +4,7 @@ using KitchenStock.Api.Middlewares;
 using KitchenStock.Api.Transformers;
 using KitchenStock.Application.Modules.Auth.Abstractions;
 using KitchenStock.Infrastructure.Configuration;
-using KitchenStock.Infrastructure.Modules.Auth;
+using KitchenStock.Infrastructure.Modules.Auth.Extensions;
 using KitchenStock.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;

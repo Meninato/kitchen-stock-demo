@@ -77,10 +77,7 @@ public class AuthService : IAuthService
             var accessToken = await GenerateJwtTokenAsync(MapToAuthUser(user));
             var refreshToken = await GenerateRefreshTokenAsync(user.Id, ipAddress, userAgent);
 
-            var authResponse = new AuthResponseDto(
-                accessToken.TokenValue, 
-                accessToken.UtcExpiresAt,
-                refreshToken.TokenValue);
+            var authResponse = new AuthResponseDto(accessToken, refreshToken);
 
             return AuthResult.Success(authResponse);
         }
@@ -143,7 +140,7 @@ public class AuthService : IAuthService
 
         await _refreshTokenRepository.CreateAsync(refreshToken);
 
-        return new RefreshTokenDto(tokenValue);
+        return new RefreshTokenDto(tokenValue, refreshToken.ExpiresAt);
     }
 
     public async Task<AuthResult> RefreshTokenAsync(string refreshTokenValue, string ipAddress, string userAgent)
@@ -183,10 +180,7 @@ public class AuthService : IAuthService
                 "Replaced by new token",
                 HashToken(newRefreshToken.TokenValue));
 
-            var authResponse = new AuthResponseDto(
-                newAccessToken.TokenValue,
-                newAccessToken.UtcExpiresAt,
-                newRefreshToken.TokenValue);
+            var authResponse = new AuthResponseDto(newAccessToken, newRefreshToken);
 
             return AuthResult.Success(authResponse);
         }

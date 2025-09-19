@@ -49,4 +49,15 @@ public static class AuthErrors
         new Error("Refresh token not found")
             .WithMetadata("ErrorCode", "AUTH_REFRESH_TOKEN_NOT_FOUND")
             .WithMetadata("Type", "Authentication");
+
+    public static Error MissingRefreshToken =>
+        new Error("Refresh token not found")
+            .WithMetadata("ErrorCode", "AUTH_REFRESH_TOKEN_MISSING")
+            .WithMetadata("Type", "Authentication");
+
+    public static Error RevokeAllRefreshTokenFailed =>
+        new Error("Failed to revoke all refresh tokens")
+            .WithMetadata("ErrorCode", "AUTH_REVOKE_ALL_REFRESH_TOKEN_FAILED")
+            .WithMetadata("Type", "Authentication");
+
 }

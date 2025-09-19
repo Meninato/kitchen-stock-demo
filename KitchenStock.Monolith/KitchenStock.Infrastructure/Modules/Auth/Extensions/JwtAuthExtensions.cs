@@ -1,4 +1,5 @@
-﻿using KitchenStock.Application.Modules.Auth.Dtos;
+﻿using KitchenStock.Application.Modules.Auth.Constants;
+using KitchenStock.Application.Modules.Auth.Dtos;
 using KitchenStock.Application.Security.Vault.Abstractions;
 using KitchenStock.Infrastructure.Configuration;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -7,7 +8,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
-namespace KitchenStock.Infrastructure.Modules.Auth;
+namespace KitchenStock.Infrastructure.Modules.Auth.Extensions;
 
 public static class JwtAuthExtensions
 {
@@ -36,6 +37,18 @@ public static class JwtAuthExtensions
                     ValidAudience = vaultJwt.Audience,
                     ValidateLifetime = true,
                     ClockSkew = TimeSpan.Zero
+                };
+
+                options.Events = new JwtBearerEvents()
+                {
+                    OnMessageReceived = context =>
+                    {
+                        if (context.Request.Cookies.ContainsKey(AuthCookieNames.AccessToken))
+                        {
+                            context.Token = context.Request.Cookies[AuthCookieNames.AccessToken];
+                        }
+                        return Task.CompletedTask;
+                    }
                 };
             });
 

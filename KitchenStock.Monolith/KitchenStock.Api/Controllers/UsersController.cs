@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace KitchenStock.Api.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class UsersController : ApiControllerBase
@@ -19,11 +20,16 @@ public class UsersController : ApiControllerBase
         _mediator = mediator;
     }
 
-    [HttpPost("register")]
+    [HttpPost]
     public async Task<IActionResult> Register([FromBody] RegisterUserDto request)
     {
+        //TODO: review user API to see if is necessary to let all of this in the endpoint unless you have an admin
+        //role maybe
+
+        return ErrorToActionResult(UserErrors.Authorization.AccessDenied);
+
         //always register the user as basic plan
-        var command = new RegisterUserCommand(request.Name, request.Email, request.Password);
+        var command = new CreateUserCommand(request.Name, request.Email, request.Password);
         var result = await _mediator.Send(command);
 
         if (result.IsSuccess)
@@ -39,7 +45,6 @@ public class UsersController : ApiControllerBase
         return FirstErrorToActionResult(result.Errors);
     }
 
-    [Authorize]
     [HttpGet("{id}")]
     public async Task<IActionResult> GetUser(Guid id)
     {
@@ -55,7 +60,6 @@ public class UsersController : ApiControllerBase
         return FirstErrorToActionResult(result.Errors);
     }
 
-    [Authorize]
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UpdateUserDto request)
     {
@@ -71,7 +75,6 @@ public class UsersController : ApiControllerBase
         return FirstErrorToActionResult(result.Errors);
     }
 
-    [Authorize]
     [HttpPut("{id}/plan")]
     public async Task<IActionResult> UpdatePlan(Guid id, [FromBody] UpdateUserPlanDto request)
     {
@@ -87,7 +90,6 @@ public class UsersController : ApiControllerBase
         return FirstErrorToActionResult(result.Errors);
     }
 
-    [Authorize]
     [HttpGet("me")]
     public async Task<IActionResult> GetCurrentUser()
     {

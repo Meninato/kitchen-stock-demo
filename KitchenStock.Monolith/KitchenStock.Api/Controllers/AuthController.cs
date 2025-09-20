@@ -2,6 +2,8 @@
 using KitchenStock.Application.Modules.Auth.Dtos;
 using KitchenStock.Application.Modules.Auth.MediatR.Commands;
 using KitchenStock.Application.Modules.Auth.Results;
+using KitchenStock.Application.Modules.User.Dtos;
+using KitchenStock.Application.Modules.User.MediatR.Commands;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -20,14 +22,38 @@ public class AuthController : ApiControllerBase
     }
 
     [HttpPost("authenticate")]
-    public async Task<IActionResult> Login([FromBody] AuthenticateUserCommand command)
+    public async Task<IActionResult> Authenticate([FromBody] AuthenticateUserDto request)
     {
+        var ipAddress = GetIpAddress();
+        var userAgent = GetUserAgent();
+
+        var command = new AuthenticateUserCommand(request.Email, request.Password, ipAddress, userAgent);
         var result = await _mediator.Send(command);
 
         if (result.IsSuccess)
         {
             SetTokenCookies(result.Value.AccessToken, result.Value.RefreshToken);
             return Ok();
+        }
+
+        return FirstErrorToActionResult(result.Errors);
+    }
+
+    [HttpPost("register")]
+    public async Task<IActionResult> Register([FromBody] RegisterUserDto request)
+    {
+        //always register the user as basic plan
+        var command = new CreateUserCommand(request.Name, request.Email, request.Password);
+        var result = await _mediator.Send(command);
+
+        if (result.IsSuccess)
+        {
+            return ApiCreatedAtAction(
+                nameof(UsersController.GetUser),
+                "Users",
+                new { id = result.Value.Id },
+                result.Value
+            );
         }
 
         return FirstErrorToActionResult(result.Errors);
@@ -94,11 +120,7 @@ public class AuthController : ApiControllerBase
         if (result.IsSuccess)
             return Ok();
 
-        return BadRequest(new
-        {
-            success = false,
-            message = result.Errors.FirstOrDefault()?.Message ?? "Failed to revoke tokens"
-        });
+       return ErrorToActionResult(AuthErrors.RevokeAllRefreshTokenFailed);
     }
 
     private void SetTokenCookies(AccessTokenDto accessToken, RefreshTokenDto refreshToken)

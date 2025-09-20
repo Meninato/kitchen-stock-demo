@@ -4,7 +4,7 @@ using MediatR;
 
 namespace KitchenStock.Application.Modules.User.MediatR.Commands;
 
-public record RegisterUserCommand(
+public record CreateUserCommand(
     string Name,
     string Email,
     string Password,

@@ -6,21 +6,21 @@ using MediatR;
 
 namespace KitchenStock.Application.Modules.User.MediatR.Handlers;
 
-public class RegisterUserHandler : IRequestHandler<RegisterUserCommand, UserResult>
+public class CreateUserHandler : IRequestHandler<CreateUserCommand, UserResult>
 {
     private readonly IUserService _userService;
 
-    public RegisterUserHandler(IUserService userService)
+    public CreateUserHandler(IUserService userService)
     {
         _userService = userService;
     }
 
-    public async Task<UserResult> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
+    public async Task<UserResult> Handle(CreateUserCommand request, CancellationToken cancellationToken)
     {
         return await _userService.CreateUserAsync(MapToDto(request));
     }
 
-    private CreateUserDto MapToDto(RegisterUserCommand request)
+    private CreateUserDto MapToDto(CreateUserCommand request)
     {
         return new CreateUserDto(request.Name, request.Email, request.Password);
     }

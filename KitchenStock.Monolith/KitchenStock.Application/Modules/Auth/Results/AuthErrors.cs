@@ -58,6 +58,6 @@ public static class AuthErrors
     public static Error RevokeAllRefreshTokenFailed =>
         new Error("Failed to revoke all refresh tokens")
             .WithMetadata("ErrorCode", "AUTH_REVOKE_ALL_REFRESH_TOKEN_FAILED")
-            .WithMetadata("Type", "Authentication");
+            .WithMetadata("Type", "Validation");
 
 }

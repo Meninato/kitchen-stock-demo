@@ -8,6 +8,7 @@ using KitchenStock.Application.Modules.UnitOfMeasure.Abstractions;
 using KitchenStock.Application.Modules.User.Abstractions;
 using KitchenStock.Application.Security.Vault.Abstractions;
 using KitchenStock.Infrastructure.Configuration;
+using KitchenStock.Infrastructure.Modules.Auth.Repositories;
 using KitchenStock.Infrastructure.Modules.Auth.Services;
 using KitchenStock.Infrastructure.Modules.Ingredients.Repositories;
 using KitchenStock.Infrastructure.Modules.Ingredients.Services;
@@ -70,6 +71,7 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfMeasureRepository, UnitOfMeasureRepository>();
         services.AddScoped<ISupplierRepository, SupplierRepository>();
         services.AddScoped<IRecipeRepository, RecipeRepository>();
+        services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IAuthService, AuthService>();

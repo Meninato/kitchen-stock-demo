@@ -94,13 +94,18 @@ class ApiClient {
           _retry?: boolean;
         };
 
+        const isAuthRoute = originalRequest?.url?.includes("/auth");
+
         //Handle 401 Unauthorized
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        if (
+          error.response?.status === 401 &&
+          !originalRequest._retry &&
+          !isAuthRoute
+        ) {
           if (this.isRefreshing) {
             return new Promise((resolve, reject) => {
               this.failedQueue.push({ resolve, reject });
-            }).then((token) => {
-              originalRequest.headers!.Authorization = `Bearer ${token}`;
+            }).then(() => {
               return this.client(originalRequest);
             });
           }
@@ -117,7 +122,7 @@ class ApiClient {
             this.processQueue(refreshError);
 
             if (typeof window !== "undefined") {
-              window.location.href = "/login";
+              window.location.href = "/auth/sign-in";
             }
 
             throw refreshError;

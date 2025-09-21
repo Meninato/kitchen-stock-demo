@@ -1,25 +1,35 @@
 "use client";
 
 import { useState } from "react";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Alert } from "@/components/ui/alert";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-export function DismissibleAlert() {
+interface Props {
+  icon?: React.ElementType;
+  iconClassName?: string;
+  children: React.ReactNode;
+  className?: string;
+}
+
+export function DismissibleAlert({
+  children,
+  className,
+  icon: Icon,
+  iconClassName
+}: Props) {
   const [open, setOpen] = useState(true);
 
   if (!open) return null;
 
   return (
-    <Alert className="relative">
-      <div className="flex flex-col gap-1">
-        <AlertTitle>Aviso</AlertTitle>
-        <AlertDescription>
-          Este é um alerta que você pode fechar manualmente.
-        </AlertDescription>
+    <Alert className={cn("relative flex items-center gap-2", className)}>
+      {Icon && <Icon className={cn("h-4 w-4 shrink-0", iconClassName)} />}
+      <div>
+        {children}
       </div>
 
-      {/* Close button */}
       <Button
         variant="ghost"
         size="icon"

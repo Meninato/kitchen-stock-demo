@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,7 +10,7 @@ import { Loader2Icon, OctagonAlertIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Alert, AlertTitle } from "@/components/ui/alert";
+import { AlertTitle } from "@/components/ui/alert";
 import {
   Form,
   FormControl,
@@ -19,16 +20,17 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { PasswordInput } from "@/components/password-input";
-import Link from "next/link";
+import { DismissibleAlert } from "@/components/dismissible-alert";
+
+import { getErrorMessage } from "@/lib/api-client";
 import { authLoginSchema, LoginDto } from "@/modules/auth/api/types";
 import { AUTH_API_ROUTES } from "@/modules/auth/api/api-routes";
 import { useAuthLogin } from "@/modules/auth/hooks/mutations/useAuthLogin";
-import { DismissibleAlert } from "@/components/dismissible-alert";
 
 export const SignInView = () => {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
-  const { isPending, mutateAsync, mutate } = useAuthLogin();
+  const { isPending, mutateAsync } = useAuthLogin();
 
   const form = useForm<LoginDto>({
     resolver: zodResolver(authLoginSchema),
@@ -44,8 +46,8 @@ export const SignInView = () => {
     try {
       await mutateAsync(data);
     } catch(err) {
-      console.log(err);
-      setError("failed");
+      const message = getErrorMessage(err);
+      setError(message);
     }   
   };
   
@@ -104,11 +106,14 @@ export const SignInView = () => {
                     )}
                   />
                 </div>
-                {!!error && (<DismissibleAlert />
-                  // <Alert className="bg-destructive/10 border-none">
-                  //   <OctagonAlertIcon className="h-4 w-4 !text-destructive" />
-                  //   <AlertTitle>{error}</AlertTitle>
-                  // </Alert>
+                {!!error && (
+                  <DismissibleAlert 
+                    className="bg-destructive/10 border-none"
+                    icon={OctagonAlertIcon}
+                    iconClassName="!text-destructive"
+                  >
+                    <AlertTitle>{error}</AlertTitle>
+                  </DismissibleAlert>
                 )}
                 <Button type="submit" className="w-full" disabled={isPending}>
                   {isPending 

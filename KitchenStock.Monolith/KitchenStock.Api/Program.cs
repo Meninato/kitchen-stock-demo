@@ -51,6 +51,7 @@ builder.Services.AddMediatR(cfg =>
 builder.Services.Configure<KitchenStockSettings>(builder.Configuration.GetSection(KitchenStockSettings.KITCHENSTOCK_SECTION));
 builder.Services.AddKitchenStockDbContext();
 builder.Services.AddKitchenStockServices(builder.Configuration);
+builder.Services.AddKitchenStockBackgroundServices();
 await builder.Services.AddJwtAuthenticationAsync();
 
 builder.Services.AddCors(options =>

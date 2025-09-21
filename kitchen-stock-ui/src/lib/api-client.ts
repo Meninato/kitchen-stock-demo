@@ -37,6 +37,27 @@ export class ApiError<T = Record<string, string>> extends Error {
   }
 }
 
+// Export helpers
+export function isApiError(error: unknown): error is ApiError {
+  return error instanceof ApiError;
+}
+
+export function getErrorMessage(error: unknown): string {
+  if (isApiError(error)) {
+    return error.message;
+  }
+
+  if (error instanceof AxiosError) {
+    return error.response?.data?.message || error.message;
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return "An unexpected error occurred";
+}
+
 class ApiClient {
   private client: AxiosInstance;
   private isRefreshing = false;
@@ -92,42 +113,74 @@ class ApiClient {
       async (error: AxiosError<ApiErrorResponse>) => {
         const originalRequest = error.config as AxiosRequestConfig & {
           _retry?: boolean;
+          _isRefreshRequest?: boolean;
         };
 
+        // Check if this is an auth-related route that shouldn't trigger refresh
         const isAuthRoute = originalRequest?.url?.includes("/auth");
+        const isRefreshRoute = originalRequest?.url?.includes("/auth/refresh");
 
-        //Handle 401 Unauthorized
-        if (
-          error.response?.status === 401 &&
-          !originalRequest._retry &&
-          !isAuthRoute
-        ) {
-          if (this.isRefreshing) {
-            return new Promise((resolve, reject) => {
-              this.failedQueue.push({ resolve, reject });
-            }).then(() => {
-              return this.client(originalRequest);
-            });
-          }
+        // Handle 401 Unauthorized
+        if (error.response?.status === 401) {
+          // If the refresh request itself failed, redirect immediately
+          if (isRefreshRoute || originalRequest._isRefreshRequest) {
+            // Clear the queue with error
+            this.processQueue(error);
+            this.isRefreshing = false;
 
-          originalRequest._retry = true;
-          this.isRefreshing = true;
-
-          try {
-            await this.refreshTokens();
-            this.processQueue(null);
-
-            return this.client(originalRequest);
-          } catch (refreshError) {
-            this.processQueue(refreshError);
-
+            // Redirect to login
             if (typeof window !== "undefined") {
               window.location.href = "/auth/sign-in";
             }
 
-            throw refreshError;
-          } finally {
-            this.isRefreshing = false;
+            // Throw the error to reject the promise
+            throw this.transformError(error);
+          }
+
+          // Don't retry on other auth routes (like login/logout)
+          if (isAuthRoute) {
+            throw this.transformError(error);
+          }
+
+          // Handle token refresh for regular routes
+          if (!originalRequest._retry) {
+            originalRequest._retry = true;
+
+            if (this.isRefreshing) {
+              // If already refreshing, queue this request
+              return new Promise((resolve, reject) => {
+                this.failedQueue.push({ resolve, reject });
+              })
+                .then(() => this.client(originalRequest))
+                .catch((err) => {
+                  throw this.transformError(err);
+                });
+            }
+
+            this.isRefreshing = true;
+
+            try {
+              await this.refreshTokens();
+              // Process all queued requests successfully
+              this.processQueue(null);
+              // Retry the original request
+              return this.client(originalRequest);
+            } catch (refreshError) {
+              // Process all queued requests with error
+              this.processQueue(refreshError);
+
+              // Redirect to login
+              if (typeof window !== "undefined") {
+                window.location.href = "/auth/sign-in";
+              }
+
+              // Throw the error to properly reject the promise
+              throw this.transformError(
+                refreshError as AxiosError<ApiErrorResponse>
+              );
+            } finally {
+              this.isRefreshing = false;
+            }
           }
         }
 
@@ -138,8 +191,23 @@ class ApiClient {
   }
 
   private async refreshTokens(): Promise<void> {
-    const response = await this.client.post("/auth/refresh");
-    return response.data;
+    try {
+      // Create a new axios instance without interceptors to avoid loops
+      const refreshClient = axios.create({
+        baseURL: process.env.NEXT_PUBLIC_API_URL,
+        timeout: parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || "30000"),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        withCredentials: true,
+      });
+
+      const response = await refreshClient.post("/auth/refresh");
+      return response.data;
+    } catch (error) {
+      // If refresh fails, throw the error to be caught by the interceptor
+      throw error;
+    }
   }
 
   private processQueue(error: unknown, result: unknown = null): void {

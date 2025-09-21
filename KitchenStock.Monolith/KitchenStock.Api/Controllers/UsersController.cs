@@ -89,16 +89,4 @@ public class UsersController : ApiControllerBase
 
         return FirstErrorToActionResult(result.Errors);
     }
-
-    [HttpGet("me")]
-    public async Task<IActionResult> GetCurrentUser()
-    {
-        var query = new GetUserByIdQuery(CurrentUserId);
-        var result = await _mediator.Send(query);
-
-        if (result.IsSuccess)
-            return ApiOk(result);
-
-        return FirstErrorToActionResult(result.Errors);
-    }
 }

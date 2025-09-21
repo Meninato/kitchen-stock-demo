@@ -4,6 +4,7 @@ using KitchenStock.Application.Modules.Auth.MediatR.Commands;
 using KitchenStock.Application.Modules.Auth.Results;
 using KitchenStock.Application.Modules.User.Dtos;
 using KitchenStock.Application.Modules.User.MediatR.Commands;
+using KitchenStock.Application.Modules.User.MediatR.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -121,6 +122,19 @@ public class AuthController : ApiControllerBase
             return Ok();
 
        return ErrorToActionResult(AuthErrors.RevokeAllRefreshTokenFailed);
+    }
+
+    [Authorize]
+    [HttpGet("me")]
+    public async Task<IActionResult> GetCurrentUser()
+    {
+        var query = new GetUserByIdQuery(CurrentUserId);
+        var result = await _mediator.Send(query);
+
+        if (result.IsSuccess)
+            return ApiOk(result);
+
+        return FirstErrorToActionResult(result.Errors);
     }
 
     private void SetTokenCookies(AccessTokenDto accessToken, RefreshTokenDto refreshToken)

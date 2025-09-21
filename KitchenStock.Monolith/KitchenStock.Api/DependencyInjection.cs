@@ -7,6 +7,7 @@ using KitchenStock.Application.Modules.Supplier.Abstractions;
 using KitchenStock.Application.Modules.UnitOfMeasure.Abstractions;
 using KitchenStock.Application.Modules.User.Abstractions;
 using KitchenStock.Application.Security.Vault.Abstractions;
+using KitchenStock.Infrastructure.BackgroundServices;
 using KitchenStock.Infrastructure.Configuration;
 using KitchenStock.Infrastructure.Modules.Auth.Repositories;
 using KitchenStock.Infrastructure.Modules.Auth.Services;
@@ -81,6 +82,13 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfMeasureService, UnitOfMeasureService>();
         services.AddScoped<ISupplierService, SupplierService>();
         services.AddScoped<IRecipeService, RecipeService>();
+
+        return services;
+    }
+
+    public static IServiceCollection AddKitchenStockBackgroundServices(this IServiceCollection services)
+    {
+        services.AddHostedService<TokenCleanupBgService>();
 
         return services;
     }

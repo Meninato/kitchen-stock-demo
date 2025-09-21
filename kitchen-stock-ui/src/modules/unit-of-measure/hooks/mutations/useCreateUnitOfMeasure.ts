@@ -10,7 +10,7 @@ import {
 } from "@/modules/unit-of-measure/api/types";
 import { unitOfMeasureEndpoints } from "@/modules/unit-of-measure/api/endpoint";
 import { ApiError } from "@/lib/api-client";
-import { unitOfMeasureKeys } from "../queries/query-keys";
+import { unitOfMeasureKeys } from "../queries/uom-query-keys";
 
 export const useCreateUnitOfMeasure = (
   options?: Omit<

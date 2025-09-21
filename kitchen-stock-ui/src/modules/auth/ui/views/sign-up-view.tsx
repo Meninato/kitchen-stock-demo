@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2Icon, OctagonAlertIcon } from "lucide-react";
@@ -22,36 +22,38 @@ import {
 } from "@/components/ui/form";
 import { PasswordInput } from "@/components/password-input";
 import { DismissibleAlert } from "@/components/dismissible-alert";
-import { getErrorMessage } from "@/lib/api-client";
-import { authLoginSchema, FormLoginDto } from "@/modules/auth/api/types";
-import { useAuthLogin } from "@/modules/auth/hooks/mutations/useAuthLogin";
 
+import { useAuthRegister } from "@/modules/auth/hooks/mutations/useAuthRegister";
+import { authRegisterSchema, FormRegisterDto } from "@/modules/auth/api/types";
+import { getErrorMessage } from "@/lib/api-client";
 import { APP_ROUTES } from "@/app-routes";
 
-export const SignInView = () => {
+export const SignUpView = () => {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
-  const { isPending, mutateAsync } = useAuthLogin();
+  const { isPending, mutateAsync } = useAuthRegister();
 
-  const form = useForm<FormLoginDto>({
-    resolver: zodResolver(authLoginSchema),
+  const form = useForm<FormRegisterDto>({
+    resolver: zodResolver(authRegisterSchema),
     defaultValues: {
+      name: "",
       email: "",
       password: "",
+      confirmPassword: "",
     },
   });
 
-  const onSubmit = async (data: FormLoginDto) => {
+  const onSubmit = async (data: FormRegisterDto) => {
     setError(null);
     
     try {
       await mutateAsync(data);
-      router.push(APP_ROUTES.APP.HOME);
+      router.push(APP_ROUTES.AUTH.SIGN_IN);
     } catch(err) {
       const message = getErrorMessage(err);
       setError(message);
-    }   
-  };
+    } 
+  }
   
   return (
     <div className="flex flex-col gap-6">
@@ -61,10 +63,31 @@ export const SignInView = () => {
             <form onSubmit={form.handleSubmit(onSubmit)} className="p-6 md:p-8">
               <div className="flex flex-col gap-6">
                 <div className="flex flex-col items-center text-center">
-                  <h1 className="text-2xl font-bold">Seja bem-vindo!</h1>
+                  <h1 className="text-2xl font-bold">
+                    Vamos lá!
+                  </h1>
                   <p className="text-muted-foreground text-balance">
-                    Acesse a sua conta
+                    Crie sua conta
                   </p>
+                </div>
+                <div className="grid gap-3">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nome</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="text"
+                            placeholder="John Doe"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
                 <div className="grid gap-3">
                   <FormField
@@ -91,17 +114,30 @@ export const SignInView = () => {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <div className="flex items-center">
-                          <FormLabel>Senha</FormLabel>
-                          <Link
-                            href={APP_ROUTES.AUTH.FORGOT_PASSWORD}
-                            className="ml-auto text-sm underline-offset-2 hover:underline"
-                          >
-                            Esqueceu a senha?
-                          </Link>
-                        </div>
+                        <FormLabel>Senha</FormLabel>
                         <FormControl>
-                          <PasswordInput {...field} />
+                          <PasswordInput
+                            placeholder="********"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="grid gap-3">
+                  <FormField
+                    control={form.control}
+                    name="confirmPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Confirme a senha</FormLabel>
+                        <FormControl>
+                          <PasswordInput
+                            placeholder="********"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -117,20 +153,25 @@ export const SignInView = () => {
                     <AlertDescription>{error}</AlertDescription>
                   </DismissibleAlert>
                 )}
-                <Button type="submit" className="w-full" disabled={isPending}>
+                <Button
+                  disabled={isPending}
+                  type="submit"
+                  className="w-full"
+                >
                   {isPending 
                     ? (<Loader2Icon className="animate-spin" />)
                     : "Entrar"}
                 </Button>
                 <div className="text-center text-sm">
-                  Não tem uma conta?{" "}
-                  <Link prefetch href={APP_ROUTES.AUTH.SIGN_UP} className="underline underline-offset-4">
-                    Cadastre-se
+                  Já tem uma conta?{" "}
+                  <Link prefetch href={APP_ROUTES.AUTH.SIGN_IN} className="underline underline-offset-4">
+                    Entrar
                   </Link>
                 </div>
               </div>
             </form>
           </Form>
+
           <div className="bg-muted relative hidden md:block">
             <Image
               src="/placeholder.svg"
@@ -142,6 +183,7 @@ export const SignInView = () => {
           </div>
         </CardContent>
       </Card>
+
       <div className="text-muted-foreground *:[a]:hover:text-primary text-center text-xs text-balance *:[a]:underline *:[a]:underline-offset-4">
         Ao clicar no botão entrar, você concorda com nossos <a href="#">Termos de Serviço</a>{" "}
         e <a href="#">Política de Privacidade</a>.

@@ -43,19 +43,14 @@ public class AuthController : ApiControllerBase
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterUserDto request)
     {
+        //TODO: perhaps create a new dto specific for the auth user response
+
         //always register the user as basic plan
         var command = new CreateUserCommand(request.Name, request.Email, request.Password);
         var result = await _mediator.Send(command);
 
         if (result.IsSuccess)
-        {
-            return ApiCreatedAtAction(
-                nameof(UsersController.GetUser),
-                "Users",
-                new { id = result.Value.Id },
-                result.Value
-            );
-        }
+            return ApiOk(result);
 
         return FirstErrorToActionResult(result.Errors);
     }

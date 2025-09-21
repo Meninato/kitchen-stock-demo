@@ -2,7 +2,7 @@ import { useQuery, UseQueryOptions } from "@tanstack/react-query";
 
 import { unitOfMeasureEndpoints } from "@/modules/unit-of-measure/api/endpoint";
 import { UnitOfMeasure } from "@/modules/unit-of-measure/api/types";
-import { unitOfMeasureKeys } from "./query-keys";
+import { unitOfMeasureKeys } from "./uom-query-keys";
 
 export const useUnitOfMeasure = (
   id: string,

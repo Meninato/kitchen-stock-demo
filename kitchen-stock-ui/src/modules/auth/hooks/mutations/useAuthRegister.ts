@@ -2,13 +2,16 @@ import { useMutation, UseMutationOptions } from "@tanstack/react-query";
 
 import { ApiError } from "@/lib/api-client";
 import { authEndpoints } from "@/modules/auth/api/endpoint";
-import { ApiLoginDto } from "../../api/types";
+import { AuthUser, ApiRegisterDto } from "../../api/types";
 
-export const useAuthLogin = (
-  options?: Omit<UseMutationOptions<void, ApiError, ApiLoginDto>, "mutationFn">
+export const useAuthRegister = (
+  options?: Omit<
+    UseMutationOptions<AuthUser, ApiError, ApiRegisterDto>,
+    "mutationFn"
+  >
 ) => {
   return useMutation({
-    mutationFn: authEndpoints.authenticate,
+    mutationFn: authEndpoints.register,
     onSuccess: async (data, variables, onMutateResult, context) => {
       // Call custom onSuccess if provided
       options?.onSuccess?.(data, variables, onMutateResult, context);

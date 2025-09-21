@@ -4,8 +4,8 @@ export interface UnitOfMeasure {
   id: string;
   name: string;
   symbol: string;
-  ingredientCount: number;
-  isSystemUnit: boolean;
+  ingredient_count: number;
+  is_system_unit: boolean;
 }
 
 export const createUnitOfMeasureSchema = z.object({

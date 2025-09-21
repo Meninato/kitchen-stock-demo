@@ -25,4 +25,9 @@ export const serverTokenStorage = {
     const token = await this.getAccessToken();
     return !!token;
   },
+
+  async hasRefreshToken(): Promise<boolean> {
+    const token = await this.getRefreshToken();
+    return !!token;
+  },
 };

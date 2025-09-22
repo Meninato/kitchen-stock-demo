@@ -1,3 +1,4 @@
+import { AUTH_API_ROUTES } from "@/modules/auth/api/endpoint";
 import axios, {
   AxiosError,
   AxiosInstance,
@@ -61,9 +62,11 @@ export function getErrorMessage(error: unknown): string {
 class ApiClient {
   private client: AxiosInstance;
   private isRefreshing = false;
+  private refreshPromise: Promise<void> | null = null;
   private failedQueue: Array<{
     resolve: (result: unknown) => void;
     reject: (error: unknown) => void;
+    config: AxiosRequestConfig;
   }> = [];
 
   constructor() {
@@ -113,113 +116,184 @@ class ApiClient {
       async (error: AxiosError<ApiErrorResponse>) => {
         const originalRequest = error.config as AxiosRequestConfig & {
           _retry?: boolean;
-          _isRefreshRequest?: boolean;
+          _queued?: boolean;
         };
 
-        // Check if this is an auth-related route that shouldn't trigger refresh
-        const isAuthRoute = originalRequest?.url?.includes("/auth");
-        const isRefreshRoute = originalRequest?.url?.includes("/auth/refresh");
+        // If no config, reject immediately
+        if (!originalRequest) {
+          throw this.transformError(error);
+        }
+
+        const authRoutes = Object.values(AUTH_API_ROUTES).filter(
+          (route) => route !== AUTH_API_ROUTES.ME
+        );
+
+        const shouldSkipRefresh = authRoutes.some((route) =>
+          originalRequest?.url?.includes(route)
+        );
 
         // Handle 401 Unauthorized
-        if (error.response?.status === 401) {
-          // If the refresh request itself failed, redirect immediately
-          if (isRefreshRoute || originalRequest._isRefreshRequest) {
-            // Clear the queue with error
-            this.processQueue(error);
-            this.isRefreshing = false;
+        if (error.response?.status === 401 && !shouldSkipRefresh) {
+          // Don't retry if we've already retried this request
+          if (originalRequest._retry) {
+            if (process.env.NEXT_PUBLIC_ENV === "development") {
+              console.log(
+                `[API Client] Request already retried, rejecting: ${originalRequest.url}`
+              );
+            }
+            throw this.transformError(error);
+          }
 
-            // Redirect to login
-            if (typeof window !== "undefined") {
-              window.location.href = "/auth/sign-in";
+          originalRequest._retry = true;
+
+          // If a refresh is in progress, wait for it
+          if (this.isRefreshing && this.refreshPromise) {
+            if (process.env.NEXT_PUBLIC_ENV === "development") {
+              console.log(
+                `[API Client] Waiting for existing refresh for: ${originalRequest.url}`
+              );
             }
 
-            // Throw the error to reject the promise
-            throw this.transformError(error);
+            try {
+              // Wait for the existing refresh to complete
+              await this.refreshPromise;
+              // Retry the original request
+              return this.client(originalRequest);
+            } catch (refreshError) {
+              // Refresh failed, propagate the error
+              throw this.transformError(
+                refreshError as AxiosError<ApiErrorResponse>
+              );
+            }
           }
 
-          // Don't retry on other auth routes (like login/logout)
-          if (isAuthRoute) {
-            throw this.transformError(error);
-          }
-
-          // Handle token refresh for regular routes
-          if (!originalRequest._retry) {
-            originalRequest._retry = true;
-
-            if (this.isRefreshing) {
-              // If already refreshing, queue this request
-              return new Promise((resolve, reject) => {
-                this.failedQueue.push({ resolve, reject });
-              })
-                .then(() => this.client(originalRequest))
-                .catch((err) => {
-                  throw this.transformError(err);
-                });
+          // No refresh in progress, start one
+          if (!this.isRefreshing) {
+            if (process.env.NEXT_PUBLIC_ENV === "development") {
+              console.log(
+                `[API Client] Starting token refresh triggered by: ${originalRequest.url}`
+              );
             }
 
             this.isRefreshing = true;
 
+            // Create the refresh promise that all requests will share
+            this.refreshPromise = this.performTokenRefresh();
+
             try {
-              await this.refreshTokens();
-              // Process all queued requests successfully
-              this.processQueue(null);
+              await this.refreshPromise;
+
+              if (process.env.NEXT_PUBLIC_ENV === "development") {
+                console.log(
+                  `[API Client] Refresh successful, retrying: ${originalRequest.url}`
+                );
+              }
+
               // Retry the original request
               return this.client(originalRequest);
             } catch (refreshError) {
-              // Process all queued requests with error
-              this.processQueue(refreshError);
-
-              // Redirect to login
-              if (typeof window !== "undefined") {
-                window.location.href = "/auth/sign-in";
+              if (process.env.NEXT_PUBLIC_ENV === "development") {
+                console.error(
+                  `[API Client] Refresh failed for: ${originalRequest.url}`
+                );
               }
-
-              // Throw the error to properly reject the promise
               throw this.transformError(
                 refreshError as AxiosError<ApiErrorResponse>
               );
-            } finally {
-              this.isRefreshing = false;
             }
           }
+
+          // This should rarely happen, but queue the request as a fallback
+          if (process.env.NEXT_PUBLIC_ENV === "development") {
+            console.log(
+              `[API Client] Queueing request: ${originalRequest.url}`
+            );
+          }
+
+          return new Promise((resolve, reject) => {
+            this.failedQueue.push({
+              resolve,
+              reject,
+              config: originalRequest,
+            });
+          });
         }
 
-        // Transform error to our custom ApiError
+        // Not a 401 or shouldn't refresh, transform and throw the error
         throw this.transformError(error);
       }
     );
   }
 
-  private async refreshTokens(): Promise<void> {
+  private async performTokenRefresh(): Promise<void> {
     try {
-      // Create a new axios instance without interceptors to avoid loops
-      const refreshClient = axios.create({
-        baseURL: process.env.NEXT_PUBLIC_API_URL,
-        timeout: parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || "30000"),
-        headers: {
-          "Content-Type": "application/json",
-        },
-        withCredentials: true,
-      });
+      // Perform the actual refresh
+      await this.refreshTokens();
 
-      const response = await refreshClient.post("/auth/refresh");
-      return response.data;
+      if (process.env.NEXT_PUBLIC_ENV === "development") {
+        console.log("[API Client] Token refresh successful");
+      }
+
+      // Process any queued requests
+      this.processQueue(null);
     } catch (error) {
-      // If refresh fails, throw the error to be caught by the interceptor
+      if (process.env.NEXT_PUBLIC_ENV === "development") {
+        console.error("[API Client] Token refresh failed:", error);
+      }
+
+      // Process queued requests with error
+      this.processQueue(error);
+
+      // Redirect to login on refresh failure
+      this.handleAuthFailure();
+
       throw error;
+    } finally {
+      // Reset refresh state
+      this.isRefreshing = false;
+      this.refreshPromise = null;
     }
   }
 
-  private processQueue(error: unknown, result: unknown = null): void {
-    this.failedQueue.forEach((prom) => {
+  private async refreshTokens(): Promise<void> {
+    // Create a new axios instance without interceptors to avoid loops
+    const refreshClient = axios.create({
+      baseURL: process.env.NEXT_PUBLIC_API_URL,
+      timeout: parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || "30000"),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      withCredentials: true,
+    });
+
+    const response = await refreshClient.post("/auth/refresh");
+    return response.data;
+  }
+
+  private processQueue(error: unknown): void {
+    if (process.env.NEXT_PUBLIC_ENV === "development") {
+      console.log(
+        `[API Client] Processing ${this.failedQueue.length} queued requests`
+      );
+    }
+
+    this.failedQueue.forEach((promise) => {
       if (error) {
-        prom.reject(error);
+        promise.reject(error);
       } else {
-        prom.resolve(result);
+        // Retry the request
+        this.client(promise.config).then(promise.resolve).catch(promise.reject);
       }
     });
 
     this.failedQueue = [];
+  }
+
+  private handleAuthFailure(): void {
+    if (typeof window !== "undefined") {
+      // Redirect to login page
+      window.location.href = "/auth/sign-in";
+    }
   }
 
   private transformError<T = Record<string, string>>(

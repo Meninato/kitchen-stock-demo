@@ -6,8 +6,10 @@ using KitchenStock.Application.Modules.Auth.Abstractions;
 using KitchenStock.Infrastructure.Configuration;
 using KitchenStock.Infrastructure.Modules.Auth.Extensions;
 using KitchenStock.Infrastructure.Persistence;
+using KitchenStock.Infrastructure.Persistence.Seeding;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
+using Serilog;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -49,6 +51,7 @@ builder.Services.AddMediatR(cfg =>
 );
 
 builder.Services.Configure<KitchenStockSettings>(builder.Configuration.GetSection(KitchenStockSettings.KITCHENSTOCK_SECTION));
+builder.Services.AddKitchenStockLogging();
 builder.Services.AddKitchenStockDbContext();
 builder.Services.AddKitchenStockServices(builder.Configuration);
 builder.Services.AddKitchenStockBackgroundServices();
@@ -89,7 +92,10 @@ app.MapControllers();
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<KitchenStockDbContext>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<DatabaseSeeder>>();
+    
     await context.Database.EnsureCreatedAsync();
+    await DatabaseSeeder.SeedAsync(context, logger);
 }
 
 await app.RunAsync();

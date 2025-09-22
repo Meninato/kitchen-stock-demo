@@ -6,18 +6,18 @@ namespace KitchenStock.Infrastructure.BackgroundServices;
 
 public class TokenCleanupBgService : BackgroundService
 {
-    private readonly IServiceScopeFactory _serviceScopeFactory;
+    private readonly IServiceProvider _serviceProvider;
 
-    public TokenCleanupBgService(IServiceScopeFactory serviceScopeFactory)
+    public TokenCleanupBgService(IServiceProvider serviceProvider)
     {
-        _serviceScopeFactory = serviceScopeFactory;
+        _serviceProvider = serviceProvider;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            using var scope = _serviceScopeFactory.CreateScope();
+            using var scope = _serviceProvider.CreateScope();
             var refreshTokenRepository = scope.ServiceProvider.GetRequiredService<IRefreshTokenRepository>();
 
             await refreshTokenRepository.CleanupExpiredTokensAsync();

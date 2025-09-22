@@ -10,12 +10,8 @@ import {
   SidebarContent, 
   SidebarFooter, 
   SidebarGroup, 
-  SidebarGroupContent, 
   SidebarGroupLabel, 
   SidebarHeader, 
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
@@ -27,21 +23,53 @@ import {
   CollapsibleTrigger 
 } from "@/components/ui/collapsible";
 
+import { cn } from "@/lib/utils";
 import { sidebarNav } from "@/app-routes";
-import { KitchenSwitcher } from "./kitchen-switcher";
+import { KitchenSwitcher, KitchenSwitcherSkeletonPulse } from "./kitchen-switcher";
 import { Button } from "@/components/ui/button";
+import { NavUser, NavUserSkeleton } from "./nav-user";
+import { useKitchens } from "@/modules/kitchen/hooks/queries/useKitchens";
+import { useAuthMe } from "@/modules/auth/hooks/queries/useAuthMe";
 
 
 export const AppSidebar = () => {
+  const { data: kitchens, isLoading: kichenIsLoading } = useKitchens();
+  const { data: user, isLoading: userIsLoading, isError: userIsError } = useAuthMe();
   const pathname = usePathname();
+
+  function KitchenSwitcherWrapper() {
+    if (kichenIsLoading) return <KitchenSwitcherSkeletonPulse />;
+
+    if (!kitchens || kitchens.length === 0) {
+      return (
+        <div className="flex items-center justify-center h-full">
+          <p className="">Seja bem-vindo</p>
+        </div>
+      );
+    }
+
+    return (
+      <KitchenSwitcher
+        kitchens={kitchens}
+        defaultKitchen={kitchens[0]}
+      />
+    );
+  }
+
+  function NavUserWrapper() {
+    if (userIsLoading || userIsError) return <NavUserSkeleton />;
+
+    return (
+      <NavUser 
+        user={user!}
+      />
+    );
+  }
 
   return (
     <Sidebar>
       <SidebarHeader className="text-sidebar-accent-foreground">
-        <KitchenSwitcher 
-          kitchens={["Hot dog cabuloso", "Delicia de açúcar"]}
-          defaultKitchen="Hot dog cabuloso"
-        />
+        <KitchenSwitcherWrapper />
         <Button>Nova cozinha</Button>
       </SidebarHeader>
       <SidebarContent className="gap-0">
@@ -55,14 +83,13 @@ export const AppSidebar = () => {
             <SidebarGroup>
               <SidebarGroupLabel
                 asChild
-                className="group/label text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sm"
+                className="uppercase group/label text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sm"
               >
                 <CollapsibleTrigger>
-                  {item.title}{" "}
-                  <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                    {item.title}{" "}
+                    <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
                 </CollapsibleTrigger>
               </SidebarGroupLabel>
-
               {item.items?.length ? (
                 <CollapsibleContent>
                   <SidebarMenuSub>
@@ -70,6 +97,11 @@ export const AppSidebar = () => {
                       <SidebarMenuSubItem key={item.title}>
                         <SidebarMenuSubButton
                           asChild
+                          isActive={pathname === item.href}
+                          className={cn(
+                            "h-10 hover:bg-linear-to-r/oklch border border-transparent hover:border-[#5D6B68]/10 from-sidebar-accent from-5% via-30% via-sidebar/50 to-sidebar/50",
+                            pathname === item.href && "bg-linear-to-r/oklch border-[#5D6B68]/10"
+                          )}
                         >
                           <a href={item.href}>{item.title}</a>
                         </SidebarMenuSubButton>
@@ -78,29 +110,58 @@ export const AppSidebar = () => {
                   </SidebarMenuSub>
                 </CollapsibleContent>
               ) : null}
-
-              {/* <CollapsibleContent>
-                <SidebarGroupContent>
-                  <SidebarMenu>
-                    {item.items?.map((item) => (
-                      <SidebarMenuItem key={item.title}>
-                        <SidebarMenuButton asChild>
-                          <a href={item.href}>{item.title}</a>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    ))}
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              </CollapsibleContent> */}
-
             </SidebarGroup>
           </Collapsible>
         ))}
       </SidebarContent>
-      <SidebarRail />
       <SidebarFooter>
-
+        <NavUserWrapper />
       </SidebarFooter>
+      <SidebarRail />
     </Sidebar>
+  );
+}
+
+export function SidebarSkeletonPulse() {
+  const mockGroups = [
+    { title: "Menu", items: 3 },
+    { title: "Cadastros", items: 4 },
+  ];
+
+  return (
+    <div className="w-64 border-r bg-background h-screen">
+      <div className="p-4 space-y-4">
+        {/* Header */}
+        <div className="space-y-3">
+          <div className="h-12 bg-foreground/5 rounded-lg animate-pulse" />
+          <div className="h-9 bg-foreground/5 rounded-md animate-pulse" />
+        </div>
+        
+        {/* Menu Items */}
+        <div className="space-y-6 pt-4">
+          {mockGroups.map((group, index) => (
+            <div key={index} className="space-y-2">
+              <div className="h-4 w-20 bg-foreground/10 rounded animate-pulse" />
+              <div className="space-y-1 pl-2">
+                {Array.from({ length: group.items }).map((_, i) => (
+                  <div key={i} className="h-8 bg-foreground/5 rounded animate-pulse" />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      
+      {/* Footer */}
+      <div className="absolute bottom-0 left-0 right-0 p-4">
+        <div className="flex items-center gap-3">
+          <div className="size-10 rounded-full bg-foreground/10 animate-pulse" />
+          <div className="flex-1 space-y-1">
+            <div className="h-3 w-20 bg-foreground/10 rounded animate-pulse" />
+            <div className="h-3 w-32 bg-foreground/5 rounded animate-pulse" />
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

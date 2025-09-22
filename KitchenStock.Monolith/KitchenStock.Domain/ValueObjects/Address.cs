@@ -2,11 +2,11 @@
 namespace KitchenStock.Domain.ValueObjects;
 
 public record Address(
-    string? Street,
-    string? City,
-    string? State,
-    string? PostalCode,
-    string? Country,
-    double? Latitude,
-    double? Longitude
+    string? Street = null,
+    string? City = null,
+    string? State = null,
+    string? PostalCode = null,
+    string? Country = null,
+    double? Latitude = null,
+    double? Longitude = null
 );

@@ -30,6 +30,8 @@ using KitchenStock.Infrastructure.Security.Vault;
 using KitchenStock.Infrastructure.Security.Vault.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Serilog;
+using Serilog.Extensions.Logging;
 
 namespace KitchenStock.Api;
 
@@ -89,6 +91,18 @@ public static class DependencyInjection
     public static IServiceCollection AddKitchenStockBackgroundServices(this IServiceCollection services)
     {
         services.AddHostedService<TokenCleanupBgService>();
+
+        return services;
+    }
+
+    public static IServiceCollection AddKitchenStockLogging(this IServiceCollection services)
+    {
+        Log.Logger = new LoggerConfiguration()
+            .WriteTo.Console()
+            .CreateLogger();
+
+        services.AddLogging();
+        services.AddSingleton<ILoggerFactory>(new SerilogLoggerFactory());
 
         return services;
     }

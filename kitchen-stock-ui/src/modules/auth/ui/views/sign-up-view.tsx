@@ -23,7 +23,7 @@ import {
 import { PasswordInput } from "@/components/password-input";
 import { DismissibleAlert } from "@/components/dismissible-alert";
 
-import { useAuthRegister } from "@/modules/auth/hooks/mutations/useAuthRegister";
+import { useAuthRegister } from "@/modules/auth/hooks/mutations/use-auth-register";
 import { authRegisterSchema, FormRegisterDto } from "@/modules/auth/api/types";
 import { getErrorMessage } from "@/lib/api-client";
 import { APP_ROUTES } from "@/app-routes";

@@ -24,7 +24,7 @@ import { PasswordInput } from "@/components/password-input";
 import { DismissibleAlert } from "@/components/dismissible-alert";
 import { getErrorMessage } from "@/lib/api-client";
 import { authLoginSchema, FormLoginDto } from "@/modules/auth/api/types";
-import { useAuthLogin } from "@/modules/auth/hooks/mutations/useAuthLogin";
+import { useAuthLogin } from "@/modules/auth/hooks/mutations/use-auth-login";
 
 import { APP_ROUTES } from "@/app-routes";
 

@@ -11,8 +11,7 @@ import {
 
 import {
   Avatar,
-  AvatarFallback,
-  AvatarImage,
+  AvatarFallback
 } from "@/components/ui/avatar"
 import {
   DropdownMenu,
@@ -32,12 +31,20 @@ import {
 
 import { AuthUser } from "@/modules/auth/api/types"
 
+interface LogoutActions {
+  onLogout: () => Promise<void>;
+  isLoggingOut: boolean;
+  error?: Error | null;
+}
+
 interface Props {
-  user: AuthUser
+  user: AuthUser;
+  logoutActions: LogoutActions 
 }
 
 export function NavUser({
-  user
+  user,
+  logoutActions
 }: Props) {
   const { isMobile } = useSidebar()
   const fallbackAvatarName = user.name.charAt(0).toUpperCase();
@@ -103,9 +110,12 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={async () => await logoutActions.onLogout() }
+              disabled={logoutActions.isLoggingOut}
+            >
               <LogOut />
-              Log out
+              Sair
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

@@ -9,14 +9,6 @@ export const useAuthLogin = (
 ) => {
   return useMutation({
     mutationFn: authEndpoints.authenticate,
-    onSuccess: async (data, variables, onMutateResult, context) => {
-      // Call custom onSuccess if provided
-      options?.onSuccess?.(data, variables, onMutateResult, context);
-    },
-    onError: async (error, variables, onMudateResult, context) => {
-      // Call custom onError if provided
-      options?.onError?.(error, variables, onMudateResult, context);
-    },
     ...options,
   });
 };

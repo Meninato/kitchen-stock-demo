@@ -1,10 +1,13 @@
 import { cookies } from "next/headers";
 
+const refreshCookieName = "refresh_token";
+const accessCookieName = "access_token";
+
 export const serverTokenStorage = {
   async getAccessToken(): Promise<string | null> {
     try {
       const cookieStore = await cookies();
-      const token = cookieStore.get("access_token")?.value || null;
+      const token = cookieStore.get(accessCookieName)?.value || null;
       return token;
     } catch {
       return null;
@@ -14,11 +17,17 @@ export const serverTokenStorage = {
   async getRefreshToken(): Promise<string | null> {
     try {
       const cookieStore = await cookies();
-      const token = cookieStore.get("refresh_token")?.value || null;
+      const token = cookieStore.get(refreshCookieName)?.value || null;
       return token;
     } catch {
       return null;
     }
+  },
+
+  async destroyTokens(): Promise<void> {
+    const cookieStore = await cookies();
+    cookieStore.delete(refreshCookieName);
+    cookieStore.delete(accessCookieName);
   },
 
   async hasAccessToken(): Promise<boolean> {

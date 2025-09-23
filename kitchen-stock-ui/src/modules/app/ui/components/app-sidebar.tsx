@@ -1,9 +1,10 @@
 "use client";
 
-import Image from "next/image";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, EyeIcon, PlusIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 import { 
   Sidebar, 
@@ -24,21 +25,35 @@ import {
 } from "@/components/ui/collapsible";
 
 import { cn } from "@/lib/utils";
-import { sidebarNav } from "@/app-routes";
+import { APP_ROUTES, sidebarNav } from "@/app-routes";
 import { KitchenSwitcher, KitchenSwitcherSkeletonPulse } from "./kitchen-switcher";
 import { Button } from "@/components/ui/button";
 import { NavUser, NavUserSkeleton } from "./nav-user";
-import { useKitchens } from "@/modules/kitchen/hooks/queries/useKitchens";
-import { useAuthMe } from "@/modules/auth/hooks/queries/useAuthMe";
-
+import { useKitchens } from "@/modules/kitchen/hooks/queries/use-kitchens";
+import { useAuthMe } from "@/modules/auth/hooks/queries/use-auth-me";
+import { useAuthLogout } from "@/modules/auth/hooks/mutations/use-auth-logout";
+import { clearTokensAction } from "@/modules/auth/actions/clear-tokens-action";
+import { NewKitchenDialog } from "@/modules/kitchen/ui/components/new-kitchen-dialog";
 
 export const AppSidebar = () => {
-  const { data: kitchens, isLoading: kichenIsLoading } = useKitchens();
-  const { data: user, isLoading: userIsLoading, isError: userIsError } = useAuthMe();
+  const router = useRouter();
   const pathname = usePathname();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const ensureTokenIsDeleted = async () => {
+    await clearTokensAction();
+    router.push(APP_ROUTES.AUTH.SIGN_IN);
+  };
+  
+  const { data: kitchens, isLoading: kichenIsLoading, isError: kitchenIsError } = useKitchens();
+  const { data: user, isLoading: userIsLoading, isError: userIsError } = useAuthMe();
+  const { isPending: isLoggingOut, mutateAsync: logoutAsync } = useAuthLogout({
+    onSuccess: async () => await ensureTokenIsDeleted(),
+    onError: async () => await ensureTokenIsDeleted()
+  });
 
   function KitchenSwitcherWrapper() {
-    if (kichenIsLoading) return <KitchenSwitcherSkeletonPulse />;
+    if (kichenIsLoading || kitchenIsError) return <KitchenSwitcherSkeletonPulse />;
 
     if (!kitchens || kitchens.length === 0) {
       return (
@@ -62,63 +77,79 @@ export const AppSidebar = () => {
     return (
       <NavUser 
         user={user!}
+        logoutActions={{
+          onLogout: logoutAsync,
+          isLoggingOut 
+        }}
       />
     );
   }
 
   return (
-    <Sidebar>
-      <SidebarHeader className="text-sidebar-accent-foreground">
-        <KitchenSwitcherWrapper />
-        <Button>Nova cozinha</Button>
-      </SidebarHeader>
-      <SidebarContent className="gap-0">
-        {sidebarNav.map((item) => (
-          <Collapsible
-            key={item.title}
-            title={item.title}
-            defaultOpen
-            className="group/collapsible"
-          >
-            <SidebarGroup>
-              <SidebarGroupLabel
-                asChild
-                className="uppercase group/label text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sm"
-              >
-                <CollapsibleTrigger>
-                    {item.title}{" "}
-                    <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
-                </CollapsibleTrigger>
-              </SidebarGroupLabel>
-              {item.items?.length ? (
-                <CollapsibleContent>
-                  <SidebarMenuSub>
-                    {item.items.map((item) => (
-                      <SidebarMenuSubItem key={item.title}>
-                        <SidebarMenuSubButton
-                          asChild
-                          isActive={pathname === item.href}
-                          className={cn(
-                            "h-10 hover:bg-linear-to-r/oklch border border-transparent hover:border-[#5D6B68]/10 from-sidebar-accent from-5% via-30% via-sidebar/50 to-sidebar/50",
-                            pathname === item.href && "bg-linear-to-r/oklch border-[#5D6B68]/10"
-                          )}
-                        >
-                          <a href={item.href}>{item.title}</a>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                    ))}
-                  </SidebarMenuSub>
-                </CollapsibleContent>
-              ) : null}
-            </SidebarGroup>
-          </Collapsible>
-        ))}
-      </SidebarContent>
-      <SidebarFooter>
-        <NavUserWrapper />
-      </SidebarFooter>
-      <SidebarRail />
-    </Sidebar>
+    <>
+      <NewKitchenDialog open={isDialogOpen} onOpenChange={setIsDialogOpen} />
+      <Sidebar>
+        <SidebarHeader className="text-sidebar-accent-foreground">
+          <KitchenSwitcherWrapper />
+          <div className="flex items-center justify-center gap-2">
+            <Button onClick={() => setIsDialogOpen(true)}>
+              <PlusIcon />
+              Criar
+            </Button>
+            <Button>
+              <EyeIcon />
+              Ver
+            </Button>
+          </div>
+        </SidebarHeader>
+        <SidebarContent className="gap-0">
+          {sidebarNav.map((item) => (
+            <Collapsible
+              key={item.title}
+              title={item.title}
+              defaultOpen
+              className="group/collapsible"
+            >
+              <SidebarGroup>
+                <SidebarGroupLabel
+                  asChild
+                  className="uppercase group/label text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sm"
+                >
+                  <CollapsibleTrigger>
+                      {item.title}{" "}
+                      <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                  </CollapsibleTrigger>
+                </SidebarGroupLabel>
+                {item.items?.length ? (
+                  <CollapsibleContent>
+                    <SidebarMenuSub>
+                      {item.items.map((item) => (
+                        <SidebarMenuSubItem key={item.title}>
+                          <SidebarMenuSubButton
+                            asChild
+                            isActive={pathname === item.href}
+                            className={cn(
+                              "h-10 hover:bg-linear-to-r/oklch border border-transparent hover:border-[#5D6B68]/10 from-sidebar-accent from-5% via-30% via-sidebar/50 to-sidebar/50",
+                              pathname === item.href && "bg-linear-to-r/oklch border-[#5D6B68]/10"
+                            )}
+                          >
+                            <Link href={item.href}>{item.title}</Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      ))}
+                    </SidebarMenuSub>
+                  </CollapsibleContent>
+                ) : null}
+              </SidebarGroup>
+            </Collapsible>
+          ))}
+        </SidebarContent>
+        <SidebarFooter>
+          <NavUserWrapper />
+        </SidebarFooter>
+        <SidebarRail />
+      </Sidebar>
+    </>
   );
 }
 

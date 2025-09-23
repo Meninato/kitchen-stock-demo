@@ -1,14 +1,21 @@
 import { apiClient } from "@/lib/api-client";
-import { Kitchen } from "./types";
+import { ApiCreateKitchenDto, Kitchen } from "./types";
 
 export const KITCHEN_API_ROUTES = {
-  USER_KITCHENS: "/kitchens",
+  KITCHENS: "/kitchens",
 };
 
 export const kitchenEndpoints = {
   getKitchens: async (): Promise<Kitchen[]> => {
     const response = await apiClient.get<Kitchen[]>(
-      KITCHEN_API_ROUTES.USER_KITCHENS
+      KITCHEN_API_ROUTES.KITCHENS
+    );
+    return response.data;
+  },
+  createKitchen: async (data: ApiCreateKitchenDto): Promise<Kitchen> => {
+    const response = await apiClient.post<Kitchen, ApiCreateKitchenDto>(
+      KITCHEN_API_ROUTES.KITCHENS,
+      data
     );
     return response.data;
   },

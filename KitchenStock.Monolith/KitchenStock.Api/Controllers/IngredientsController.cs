@@ -1,4 +1,6 @@
-﻿using KitchenStock.Application.Modules.Ingredients.Dtos;
+﻿using KitchenStock.Api.Common.Pagination;
+using KitchenStock.Application.Common.Pagination.Dtos;
+using KitchenStock.Application.Modules.Ingredients.Dtos;
 using KitchenStock.Application.Modules.Ingredients.MediatR.Commands;
 using KitchenStock.Application.Modules.Ingredients.MediatR.Queries;
 using MediatR;
@@ -19,14 +21,22 @@ public class IngredientsController : ApiControllerBase
         _mediator = mediator;
     }
 
-    [HttpGet]
-    public async Task<IActionResult> GetIngredients([FromQuery] Guid kitchenId)
+    /// <summary>
+    /// Get paginated ingredients for a kitchen with filtering and sorting
+    /// </summary>
+    public async Task<IActionResult> GetIngredients(
+        [FromQuery] PaginationDto pagination,
+        [FromQuery] Guid kitchenId,
+        [FromQuery] string? searchTerm = null,
+        [FromQuery] bool lowStockOnly = false)
     {
-        var query = new GetIngredientsQuery(kitchenId, CurrentUserId);
+        var filter = new IngredientFilterDto(searchTerm, lowStockOnly);
+
+        var query = new GetIngredientsPagedQuery(kitchenId, CurrentUserId, pagination, filter);
         var result = await _mediator.Send(query);
 
         if (result.IsSuccess)
-            return ApiOk(result);
+            return ApiOk(result.Value.Items, b => b.WithPagination(result.Value.Details));
 
         return FirstErrorToActionResult(result.Errors);
     }
@@ -38,7 +48,7 @@ public class IngredientsController : ApiControllerBase
         var result = await _mediator.Send(query);
 
         if (result.IsSuccess)
-            return ApiOk(result);
+            return ApiOk(result.Value);
 
         return FirstErrorToActionResult(result.Errors);
     }
@@ -50,7 +60,7 @@ public class IngredientsController : ApiControllerBase
         var result = await _mediator.Send(query);
 
         if (result.IsSuccess)
-            return ApiOk(result);
+            return ApiOk(result.Value);
 
         return FirstErrorToActionResult(result.Errors);
     }
@@ -81,7 +91,7 @@ public class IngredientsController : ApiControllerBase
         var result = await _mediator.Send(command);
 
         if (result.IsSuccess)
-            return ApiOk(result);
+            return ApiOk(result.Value);
 
         return FirstErrorToActionResult(result.Errors);
     }
@@ -93,7 +103,7 @@ public class IngredientsController : ApiControllerBase
         var result = await _mediator.Send(command);
 
         if (result.IsSuccess)
-            return ApiOk(result);
+            return ApiOk(result.Value);
 
         return FirstErrorToActionResult(result.Errors);
     }

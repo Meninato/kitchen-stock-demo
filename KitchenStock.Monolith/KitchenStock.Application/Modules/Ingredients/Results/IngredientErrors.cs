@@ -48,6 +48,12 @@ public static class IngredientErrors
                 .WithMetadata("Field", "UnitOfMeasureId")
                 .WithMetadata("UnitId", unitId.ToString())
                 .WithMetadata("Type", "Validation");
+
+        public static Error MissingKitchenId =>
+            new Error($"Missing kitchen ID")
+                .WithMetadata("ErrorCode", "INGREDIENT_MISSING_KITCHEN")
+                .WithMetadata("Field", "KitchenId")
+                .WithMetadata("Type", "Validation");
     }
 
     public static class BusinessRules
@@ -90,6 +96,7 @@ public static class IngredientErrors
                 .WithMetadata("ErrorCode", "INGREDIENT_NOT_FOUND")
                 .WithMetadata("IngredientId", ingredientId.ToString())
                 .WithMetadata("Type", "NotFound");
+
 
         public static Error KitchenAccessDenied(Guid kitchenId, Guid userId) =>
             new Error($"User does not have access to kitchen {kitchenId}")

@@ -19,4 +19,8 @@
     <ProjectReference Include="..\KitchenStock.Infrastructure\KitchenStock.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Modules\Ingredients\Dtos\" />
+  </ItemGroup>
+
 </Project>

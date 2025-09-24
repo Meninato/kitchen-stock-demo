@@ -1,6 +1,8 @@
 ﻿using FluentResults;
-using KitchenStock.Api.Dtos;
+using KitchenStock.Api.Common;
+using KitchenStock.Api.Common.Pagination;
 using KitchenStock.Api.Helpers;
+using KitchenStock.Application.Common.Pagination.Dtos;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.JsonWebTokens;
 using System.Security.Claims;
@@ -24,14 +26,20 @@ public class ApiControllerBase : ControllerBase
         }
     }
 
-    protected IActionResult ApiOk<T>(Result<T> result)
+    protected IActionResult ApiOk<T>(T data, Action<ApiResponseBuilder<T>>? configure = null)
     {
-        return Ok(new ApiResponse<T>(result.Value));
+        var builder = new ApiResponseBuilder<T>(data);
+        configure?.Invoke(builder);
+
+        return Ok(builder.Build());
     }
 
-    protected IActionResult ApiCreatedAtAction<T>(string actionName, string controllerName, object? routeValues, T data)
+    protected IActionResult ApiCreatedAtAction<T>(string actionName, string controllerName, object? routeValues, T data, Action<ApiResponseBuilder<T>>? configure = null)
     {
-        return CreatedAtAction(actionName, controllerName, routeValues, new ApiResponse<T>(data));
+        var builder = new ApiResponseBuilder<T>(data);
+        configure?.Invoke(builder);
+
+        return CreatedAtAction(actionName, controllerName, routeValues, builder.Build());
     }
 
     protected IActionResult FirstErrorToActionResult(IReadOnlyList<IError> errors)
@@ -42,7 +50,7 @@ public class ApiControllerBase : ControllerBase
 
     protected IActionResult ErrorToActionResult(IError error)
     {
-        var data = new { message = error.Message, metadata = error.Metadata.ToSnakeCaseKeys() };
+        var data = new { message = error.Message, metadata = error.Metadata.ToCamelCaseKeys() };
 
         return error.Metadata.TryGetValue("Type", out var type) ? type switch
         {

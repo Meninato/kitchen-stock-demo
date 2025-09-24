@@ -8,8 +8,25 @@ import axios, {
 
 export type NoContent = null;
 
+export interface ApiPaginationRequest {
+  page: number;
+  pageSize: number;
+  sortBy?: string;
+  sortDescending?: boolean;
+}
+
+export interface ApiPaginationResponse {
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+  hasPrevious: boolean;
+  hasNext: boolean;
+}
+
 export interface ApiResponse<T = unknown> {
   data: T;
+  pagination?: ApiPaginationResponse;
   message?: string;
 }
 

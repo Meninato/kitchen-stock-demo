@@ -1,4 +1,6 @@
 ﻿using FluentResults;
+using KitchenStock.Application.Common.Pagination.Dtos;
+using KitchenStock.Application.Common.Pagination.Results;
 using KitchenStock.Application.Modules.Ingredients.Abstractions;
 using KitchenStock.Application.Modules.Ingredients.Dtos;
 using KitchenStock.Application.Modules.Ingredients.Results;
@@ -86,9 +88,11 @@ public class IngredientService : IIngredientService
         try
         {
             if (!await _kitchenRepository.UserOwnsKitchenAsync(kitchenId, userId))
-                return IngredientListResult.Failure(IngredientErrors.Authorization.KitchenAccessDenied(kitchenId, userId));
+                return IngredientListResult.Failure(
+                    IngredientErrors.Authorization.KitchenAccessDenied(kitchenId, userId));
 
             var ingredients = await _ingredientRepository.GetByKitchenIdAsync(kitchenId);
+
             var responses = new List<IngredientResponseDto>();
 
             foreach (var ingredient in ingredients)
@@ -100,7 +104,55 @@ public class IngredientService : IIngredientService
         }
         catch (Exception ex)
         {
-            return IngredientListResult.Failure(IngredientErrors.UnexpectedError("get kitchen ingredients", ex));
+            return IngredientListResult.Failure(
+                IngredientErrors.UnexpectedError("get paginated kitchen ingredients", ex));
+        }
+    }
+
+    public async Task<IngredientPaginatedResult> GetKitchenIngredientsPagedAsync(
+        Guid kitchenId,
+        Guid userId,
+        PaginationDto? pagination = null,
+        IngredientFilterDto? filter = null)
+    {
+        try
+        {
+            pagination = pagination ?? new PaginationDto();
+            filter = filter ?? new IngredientFilterDto();
+
+            if (kitchenId == Guid.Empty)
+                return IngredientPaginatedResult.Failure(
+                    IngredientErrors.Validation.MissingKitchenId);
+
+            if (!await _kitchenRepository.UserOwnsKitchenAsync(kitchenId, userId))
+                return IngredientPaginatedResult.Failure(
+                    IngredientErrors.Authorization.KitchenAccessDenied(kitchenId, userId));
+
+            var paginatedIngredients = await _ingredientRepository.GetByKitchenIdPagedAsync(
+                kitchenId,
+                pagination,
+                filter);
+
+            var responses = new List<IngredientResponseDto>();
+
+            foreach (var ingredient in paginatedIngredients.Items)
+            {
+                responses.Add(await MapToResponseAsync(ingredient));
+            }
+
+            var paginatedResponse = PaginatedResponseDto<IngredientResponseDto>.Create(
+                responses,
+                paginatedIngredients.Details.Page,
+                paginatedIngredients.Details.PageSize,
+                paginatedIngredients.Details.TotalItems
+            );
+
+            return IngredientPaginatedResult.Success(paginatedResponse);
+        }
+        catch (Exception ex)
+        {
+            return IngredientPaginatedResult.Failure(
+                IngredientErrors.UnexpectedError("get paginated kitchen ingredients", ex));
         }
     }
 

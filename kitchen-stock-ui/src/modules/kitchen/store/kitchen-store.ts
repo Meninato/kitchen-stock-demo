@@ -5,11 +5,11 @@ import { Kitchen } from "@/modules/kitchen/api/types";
 interface KitchenStore {
   selectedKitchen: Kitchen | null;
   setSelectedKitchen: (kitchen: Kitchen) => void;
-  clearSelectedKitchen: () => void;
+  reset: () => void;
 }
 
 export const useKitchenStore = create<KitchenStore>((set) => ({
   selectedKitchen: null,
   setSelectedKitchen: (kitchen) => set({ selectedKitchen: kitchen }),
-  clearSelectedKitchen: () => set({ selectedKitchen: null }),
+  reset: () => set({ selectedKitchen: null }),
 }));

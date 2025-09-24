@@ -28,7 +28,7 @@ public class StockController  :ApiControllerBase
         var result = await _mediator.Send(query);
 
         if (result.IsSuccess)
-            return ApiOk(result);
+            return ApiOk(result.Value);
 
         return FirstErrorToActionResult(result.Errors);
     }
@@ -40,7 +40,7 @@ public class StockController  :ApiControllerBase
         var result = await _mediator.Send(query);
 
         if (result.IsSuccess)
-            return ApiOk(result);
+            return ApiOk(result.Value);
 
         return FirstErrorToActionResult(result.Errors);
     }
@@ -52,7 +52,7 @@ public class StockController  :ApiControllerBase
         var result = await _mediator.Send(query);
 
         if (result.IsSuccess)
-            return ApiOk(result);
+            return ApiOk(result.Value);
 
         return FirstErrorToActionResult(result.Errors);
     }
@@ -83,7 +83,7 @@ public class StockController  :ApiControllerBase
         var result = await _mediator.Send(query);
 
         if (result.IsSuccess)
-            return ApiOk(result);
+            return ApiOk(result.Value);
 
         return FirstErrorToActionResult(result.Errors);
     }

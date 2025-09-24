@@ -17,7 +17,11 @@ export const useCreateKitchen = (
 ) => {
   const queryClient = useQueryClient();
 
-  const { onSuccess: userOnSuccess, ...restOptions } = options || {};
+  const {
+    onSuccess: userOnSuccess,
+    onError: userOnError,
+    ...restOptions
+  } = options || {};
 
   return useMutation({
     mutationFn: kitchenEndpoints.createKitchen,
@@ -31,6 +35,9 @@ export const useCreateKitchen = (
       queryClient.setQueryData(kitchenQueryKeys.detail(data.id), data);
 
       await userOnSuccess?.(data, variables, onMutateResult, context);
+    },
+    onError: async (data, variables, onMutateResult, context) => {
+      await userOnError?.(data, variables, onMutateResult, context);
     },
     ...restOptions,
   });

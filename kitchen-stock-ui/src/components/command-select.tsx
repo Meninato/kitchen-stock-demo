@@ -30,7 +30,7 @@ export const CommandSelect = ({
   onSelect,
   onSearch,
   value,
-  placeholder = "Select an option",
+  placeholder = "Selecione uma opção",
   className,
 }: Props) => {
   const [open, setOpen] = useState(false);
@@ -63,11 +63,11 @@ export const CommandSelect = ({
         open={open}
         onOpenChange={handleOpenChange}
       >
-        <CommandInput placeholder="Search..." onValueChange={onSearch} />
+        <CommandInput placeholder="Pesquisar..." onValueChange={onSearch} />
         <CommandList>
           <CommandEmpty>
             <span className="text-muted-foreground text-sm">
-              No options found
+              Nenhum item encontrado
             </span>
           </CommandEmpty>
           {options.map((option) => (

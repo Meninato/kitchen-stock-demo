@@ -7,25 +7,25 @@ import { UpdateKitchenForm } from "./update-kitchen-form";
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  initialValues: FormUpdateKitchenDto;
+  kitchen: FormUpdateKitchenDto;
 };
 
 export const UpdateKitchenDialog = ({
   open,
   onOpenChange,
-  initialValues
+  kitchen
 }: Props) => {
   return (
     <ResponsiveDialog
-      title="Edit Agent"
-      description="Edit the agent details"
+      title="Atualizar Cozinha"
+      description="Modifique as informações da cozinha"
       open={open}
       onOpenChange={onOpenChange}
     >
       <UpdateKitchenForm
         onSuccess={() => onOpenChange(false)}
         onCancel={() => onOpenChange(false)}
-        initialValues={initialValues}
+        kitchen={kitchen}
       />
     </ResponsiveDialog>
   );

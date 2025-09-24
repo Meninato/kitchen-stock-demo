@@ -1,5 +1,5 @@
 import { apiClient } from "@/lib/api-client";
-import { ApiCreateKitchenDto, Kitchen } from "./types";
+import { ApiCreateKitchenDto, ApiUpdateKitchenDto, Kitchen } from "./types";
 
 export const KITCHEN_API_ROUTES = {
   KITCHENS: "/kitchens",
@@ -15,6 +15,16 @@ export const kitchenEndpoints = {
   createKitchen: async (data: ApiCreateKitchenDto): Promise<Kitchen> => {
     const response = await apiClient.post<Kitchen, ApiCreateKitchenDto>(
       KITCHEN_API_ROUTES.KITCHENS,
+      data
+    );
+    return response.data;
+  },
+  updateKitchen: async (
+    id: string,
+    data: ApiUpdateKitchenDto
+  ): Promise<Kitchen> => {
+    const response = await apiClient.put<Kitchen, ApiUpdateKitchenDto>(
+      `${KITCHEN_API_ROUTES.KITCHENS}/${id}`,
       data
     );
     return response.data;

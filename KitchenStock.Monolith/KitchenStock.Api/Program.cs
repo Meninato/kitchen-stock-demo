@@ -9,8 +9,6 @@ using KitchenStock.Infrastructure.Persistence;
 using KitchenStock.Infrastructure.Persistence.Seeding;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
-using Serilog;
-using System.Text.Json;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,7 +22,6 @@ builder.Services.AddControllers(
     })
     .AddJsonOptions(options =>
     {
-        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
 
     }).ConfigureApiBehaviorOptions(options =>

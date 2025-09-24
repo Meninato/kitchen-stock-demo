@@ -160,7 +160,7 @@ export const SignUpView = () => {
                 >
                   {isPending 
                     ? (<Loader2Icon className="animate-spin" />)
-                    : "Entrar"}
+                    : "Cadastrar"}
                 </Button>
                 <div className="text-center text-sm">
                   Já tem uma conta?{" "}

@@ -1,3 +1,5 @@
+"use client";
+
 import { FormUpdateKitchenDto } from "@/modules/kitchen/api/types";
 
 interface Props {

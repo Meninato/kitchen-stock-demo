@@ -1,3 +1,5 @@
+"use client";
+
 import { ResponsiveDialog } from "@/components/responsive-dialog";
 import { CreateKitchenForm } from "./create-kitchen-form";
 

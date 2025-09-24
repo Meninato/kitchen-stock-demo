@@ -1,3 +1,5 @@
+"use client";
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -17,6 +19,7 @@ import {
 import { getErrorMessage } from "@/lib/api-client";
 import { FormCreateKitchenDto, kitchenCreateSchema } from "@/modules/kitchen/api/types";
 import { useCreateKitchen } from "@/modules/kitchen/hooks/mutations/use-create-kitchen";
+import { useKitchenStore } from "@/modules/kitchen/store/kitchen-store";
 
 interface Props {
   onSuccess?: () => void;
@@ -27,6 +30,7 @@ export const CreateKitchenForm = ({
   onSuccess,
   onCancel
 }: Props) => {
+  const { setSelectedKitchen } = useKitchenStore();
   const { isPending, mutateAsync: createKitchenAsync } = useCreateKitchen({
     onSuccess: () => {
       onSuccess?.();
@@ -44,7 +48,8 @@ export const CreateKitchenForm = ({
 
   const onSubmit = async (data: FormCreateKitchenDto) => {
     try {
-      await createKitchenAsync(data);
+      const newKitchen = await createKitchenAsync(data);
+      setSelectedKitchen(newKitchen);
     } catch(err) {
       const message = getErrorMessage(err);
       toast.error(message)

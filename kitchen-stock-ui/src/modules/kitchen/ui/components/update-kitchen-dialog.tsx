@@ -1,3 +1,5 @@
+"use client";
+
 import { ResponsiveDialog } from "@/components/responsive-dialog";
 import { FormUpdateKitchenDto } from "@/modules/kitchen/api/types";
 import { UpdateKitchenForm } from "./update-kitchen-form";

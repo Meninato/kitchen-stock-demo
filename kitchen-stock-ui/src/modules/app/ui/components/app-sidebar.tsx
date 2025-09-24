@@ -3,8 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronRight, EyeIcon, PlusIcon } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { ChevronRight } from "lucide-react";
 
 import { 
   Sidebar, 
@@ -26,59 +25,36 @@ import {
 
 import { cn } from "@/lib/utils";
 import { APP_ROUTES, sidebarNav } from "@/app-routes";
-import { KitchenSwitcher, KitchenSwitcherSkeletonPulse } from "./kitchen-switcher";
-import { Button } from "@/components/ui/button";
 import { NavUser, NavUserSkeleton } from "./nav-user";
-import { useKitchens } from "@/modules/kitchen/hooks/queries/use-kitchens";
 import { useAuthMe } from "@/modules/auth/hooks/queries/use-auth-me";
 import { useAuthLogout } from "@/modules/auth/hooks/mutations/use-auth-logout";
 import { clearTokensAction } from "@/modules/auth/actions/clear-tokens-action";
 import { NewKitchenDialog } from "@/modules/kitchen/ui/components/new-kitchen-dialog";
+import { KitchenManager } from "@/modules/kitchen/ui/components/kitchen-manager";
 
 export const AppSidebar = () => {
-  const router = useRouter();
   const pathname = usePathname();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { data: user } = useAuthMe();
+  const { isPending: isLoggingOut, mutateAsync: logoutAsync } = useAuthLogout();
 
-  const ensureTokenIsDeleted = async () => {
-    await clearTokensAction();
-    router.push(APP_ROUTES.AUTH.SIGN_IN);
-  };
-  
-  const { data: kitchens, isLoading: kichenIsLoading, isError: kitchenIsError } = useKitchens();
-  const { data: user, isLoading: userIsLoading, isError: userIsError } = useAuthMe();
-  const { isPending: isLoggingOut, mutateAsync: logoutAsync } = useAuthLogout({
-    onSuccess: async () => await ensureTokenIsDeleted(),
-    onError: async () => await ensureTokenIsDeleted()
-  });
+  const endSession = async () => {
+    await Promise.all([clearTokensAction(), logoutAsync()]);
 
-  function KitchenSwitcherWrapper() {
-    if (kichenIsLoading || kitchenIsError) return <KitchenSwitcherSkeletonPulse />;
+    // HARD NAVIGATION RESET
+    window.location.href = APP_ROUTES.AUTH.SIGN_IN;
 
-    if (!kitchens || kitchens.length === 0) {
-      return (
-        <div className="flex items-center justify-center h-full">
-          <p className="">Seja bem-vindo</p>
-        </div>
-      );
-    }
-
-    return (
-      <KitchenSwitcher
-        kitchens={kitchens}
-        defaultKitchen={kitchens[0]}
-      />
-    );
+    //TODO: perhaps use soft reset clearing react queries and resettign selected kitchen
   }
 
   function NavUserWrapper() {
-    if (userIsLoading || userIsError) return <NavUserSkeleton />;
+    if (!user) return <NavUserSkeleton />;
 
     return (
       <NavUser 
         user={user!}
         logoutActions={{
-          onLogout: logoutAsync,
+          onLogout: endSession,
           isLoggingOut 
         }}
       />
@@ -90,17 +66,7 @@ export const AppSidebar = () => {
       <NewKitchenDialog open={isDialogOpen} onOpenChange={setIsDialogOpen} />
       <Sidebar>
         <SidebarHeader className="text-sidebar-accent-foreground">
-          <KitchenSwitcherWrapper />
-          <div className="flex items-center justify-center gap-2">
-            <Button onClick={() => setIsDialogOpen(true)}>
-              <PlusIcon />
-              Criar
-            </Button>
-            <Button>
-              <EyeIcon />
-              Ver
-            </Button>
-          </div>
+          <KitchenManager />
         </SidebarHeader>
         <SidebarContent className="gap-0">
           {sidebarNav.map((item) => (

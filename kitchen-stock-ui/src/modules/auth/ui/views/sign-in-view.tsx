@@ -77,6 +77,7 @@ export const SignInView = () => {
                           <Input
                             type="email"
                             placeholder="m@example.com"
+                            tabIndex={1}
                             {...field}
                           />
                         </FormControl>
@@ -96,12 +97,13 @@ export const SignInView = () => {
                           <Link
                             href={APP_ROUTES.AUTH.FORGOT_PASSWORD}
                             className="ml-auto text-sm underline-offset-2 hover:underline"
+                            tabIndex={4}
                           >
                             Esqueceu a senha?
                           </Link>
                         </div>
                         <FormControl>
-                          <PasswordInput {...field} />
+                          <PasswordInput tabIndex={2} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -117,14 +119,14 @@ export const SignInView = () => {
                     <AlertDescription>{error}</AlertDescription>
                   </DismissibleAlert>
                 )}
-                <Button type="submit" className="w-full" disabled={isPending}>
+                <Button tabIndex={3} type="submit" className="w-full" disabled={isPending}>
                   {isPending 
                     ? (<Loader2Icon className="animate-spin" />)
                     : "Entrar"}
                 </Button>
                 <div className="text-center text-sm">
                   Não tem uma conta?{" "}
-                  <Link prefetch href={APP_ROUTES.AUTH.SIGN_UP} className="underline underline-offset-4">
+                  <Link tabIndex={5} prefetch href={APP_ROUTES.AUTH.SIGN_UP} className="underline underline-offset-4">
                     Cadastre-se
                   </Link>
                 </div>

@@ -5,8 +5,8 @@ export interface AuthUser {
   name: string;
   email: string;
   plan: string;
-  current_kitchens: string;
-  created_at: string;
+  currentKitchens: string;
+  createdAt: string;
 }
 
 export const authLoginSchema = z.object({

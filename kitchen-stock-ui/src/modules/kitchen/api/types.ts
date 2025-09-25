@@ -4,10 +4,10 @@ export interface Kitchen {
   id: string;
   name: string;
   description: string;
-  ingredient_count: number;
-  recipe_count: number;
-  low_stock_items: number;
-  create_at: string;
+  ingredientCount: number;
+  recipeCount: number;
+  lowStockItems: number;
+  createAt: string;
 }
 
 export const kitchenCreateSchema = z.object({

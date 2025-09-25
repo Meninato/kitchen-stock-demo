@@ -27,11 +27,11 @@ export const AppCommand = ({ open, setOpen }: Props) => {
   const [search, setSearch] = useState("");
 
   const ingredients: MockupData[] = []; // empty
-  const recipes: MockupData[] = []; // empty
-  const suppliers: MockupData[] = [
-    { id: "a", name: "John Doe Varejão" },
-    { id: "b", name: "Gisele Hortaliças" }
-  ];
+  // const recipes: MockupData[] = []; // empty
+  // const suppliers: MockupData[] = [
+  //   { id: "a", name: "John Doe Varejão" },
+  //   { id: "b", name: "Gisele Hortaliças" }
+  // ];
 
   return (
     <CommandResponsiveDialog shouldFilter={true} open={open} onOpenChange={setOpen}>
@@ -59,7 +59,7 @@ export const AppCommand = ({ open, setOpen }: Props) => {
             </CommandItem>
           ))}
         </CommandGroup>
-        <CommandGroup heading="Receitas">
+        {/* <CommandGroup heading="Receitas">
           <CommandEmpty>
             <span className="text-muted-foreground text-sm">
               Nenhuma receita
@@ -76,8 +76,8 @@ export const AppCommand = ({ open, setOpen }: Props) => {
               {recipe.name}
             </CommandItem>
           ))}
-        </CommandGroup>
-        <CommandGroup heading="Fornecedores">
+        </CommandGroup> */}
+        {/* <CommandGroup heading="Fornecedores">
           <CommandEmpty>
             <span className="text-muted-foreground text-sm">
               Nenhum fornecedor
@@ -94,7 +94,7 @@ export const AppCommand = ({ open, setOpen }: Props) => {
               {supplier.name}
             </CommandItem>
           ))}
-        </CommandGroup>
+        </CommandGroup> */}
       </CommandList>
     </CommandResponsiveDialog>
   );

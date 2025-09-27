@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/api-client";
 import { FormCreateKitchenDto, kitchenCreateSchema } from "@/modules/kitchen/api/types";
 import { useCreateKitchen } from "@/modules/kitchen/hooks/mutations/use-create-kitchen";
-import { useKitchenStore } from "@/modules/kitchen/store/kitchen-store";
+import { useKitchenQs } from "@/modules/kitchen/hooks/params/use-kitchen-qs";
 import { KitchenForm } from "./kitchen-form";
 
 interface Props {
@@ -19,7 +19,7 @@ export const CreateKitchenForm = ({
   onSuccess,
   onCancel
 }: Props) => {
-  const { setSelectedKitchen } = useKitchenStore();
+  const [, setKitchenQs] = useKitchenQs();
   const { isPending, mutateAsync: createKitchenAsync } = useCreateKitchen({
     onSuccess: () => {
       onSuccess?.();
@@ -38,7 +38,7 @@ export const CreateKitchenForm = ({
   const handleSubmit = async (data: FormCreateKitchenDto) => {
     try {
       const newKitchen = await createKitchenAsync(data);
-      setSelectedKitchen(newKitchen);
+      setKitchenQs(newKitchen.id);
     } catch(err) {
       const message = getErrorMessage(err);
       toast.error(message)

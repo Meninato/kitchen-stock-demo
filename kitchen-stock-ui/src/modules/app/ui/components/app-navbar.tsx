@@ -50,12 +50,3 @@ export const AppNavbar = () => {
     </>
   );
 };
-
-export function NavbarSkeletonPulse() {
-  return (
-    <div className="flex px-4 gap-x-2 items-center py-3 border-b bg-background">
-      <div className="size-9 rounded-md bg-foreground/5 animate-pulse" />
-      <div className="h-9 w-[240px] rounded-md bg-foreground/5 animate-pulse" />
-    </div>
-  );
-}

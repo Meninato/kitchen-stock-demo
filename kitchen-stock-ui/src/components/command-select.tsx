@@ -53,7 +53,7 @@ export const CommandSelect = ({
           className,
         )}
       >
-        <div>
+        <div className="flex-1">
           {selectedOption?.children ?? placeholder}
         </div>
         <ChevronsUpDownIcon />

@@ -1,9 +1,11 @@
 'use client';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { NuqsAdapter } from 'nuqs/adapters/next/app'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { useState } from 'react';
 import { Toaster } from 'sonner';
+import { AppProvider } from '@/modules/app/providers/app-provider';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -34,9 +36,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {children}
-      <Toaster position="top-right" richColors />
-      <ReactQueryDevtools initialIsOpen={false} />
-    </QueryClientProvider>
+        <NuqsAdapter>
+          {children}
+        </NuqsAdapter>
+        <Toaster position="top-right" richColors />
+        <ReactQueryDevtools initialIsOpen={false} />
+      </QueryClientProvider>
   );
 }

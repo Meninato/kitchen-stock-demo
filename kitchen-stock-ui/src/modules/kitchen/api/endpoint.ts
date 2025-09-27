@@ -12,6 +12,12 @@ export const kitchenEndpoints = {
     );
     return response.data;
   },
+  getKitchen: async (id: string): Promise<Kitchen> => {
+    const response = await apiClient.get<Kitchen>(
+      `${KITCHEN_API_ROUTES.KITCHENS}/${id}`
+    );
+    return response.data;
+  },
   createKitchen: async (data: ApiCreateKitchenDto): Promise<Kitchen> => {
     const response = await apiClient.post<Kitchen, ApiCreateKitchenDto>(
       KITCHEN_API_ROUTES.KITCHENS,

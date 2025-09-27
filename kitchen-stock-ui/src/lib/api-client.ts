@@ -60,6 +60,23 @@ export function isApiError(error: unknown): error is ApiError {
   return error instanceof ApiError;
 }
 
+export function getErrorStatusCode(error: unknown): number {
+  if (isApiError(error)) {
+    return error.statusCode;
+  }
+
+  if (error instanceof AxiosError) {
+    return error.response?.status ?? 0;
+  }
+
+  if (error instanceof Error) {
+    // maybe default to 500 for generic Errors
+    return 500;
+  }
+
+  return 0; // Unknown error type
+}
+
 export function getErrorMessage(error: unknown): string {
   if (isApiError(error)) {
     return error.message;

@@ -11,6 +11,8 @@ import {
   CommandGroup,
   CommandEmpty
 } from "@/components/ui/command";
+import { useIngredients } from "@/modules/ingredients/hooks/queries/use-ingredients";
+import { useKitchenQs } from "@/modules/kitchen/hooks/params/use-kitchen-qs";
 
 interface Props {
   open: boolean;
@@ -25,6 +27,8 @@ interface MockupData {
 export const AppCommand = ({ open, setOpen }: Props) => {
   const router = useRouter();
   const [search, setSearch] = useState("");
+  const [kitchenQs] = useKitchenQs();
+  // const {} = useIngredients( selectedKitchen)
 
   const ingredients: MockupData[] = []; // empty
   // const recipes: MockupData[] = []; // empty

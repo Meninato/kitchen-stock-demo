@@ -18,6 +18,7 @@ export const APP_ROUTES = {
   },
   APP: {
     HOME: "/app",
+    KITCHEN_SELECTION: "/app/kitchen-selection",
     INGREDIENTS: "/app/ingredients",
     RECIPES: "/app/recipes",
     SUPPLIERS: "/app/suppliers",

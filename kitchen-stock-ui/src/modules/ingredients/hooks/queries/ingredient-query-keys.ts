@@ -7,7 +7,6 @@ const ingredientBuilderQueryKeys = {
 };
 
 export const ingredientQueryKeys = {
-  bykitchen: (kitchenId: string) => [
+  bykitchen: (kitchenId: string) =>
     ingredientBuilderQueryKeys.byKitchenLists(kitchenId),
-  ],
 };

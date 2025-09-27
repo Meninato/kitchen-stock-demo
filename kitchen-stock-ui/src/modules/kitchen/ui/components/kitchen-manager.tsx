@@ -3,27 +3,30 @@
 import { useEffect, useState } from "react";
 import { PlusIcon, EyeIcon, EditIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { KitchenSwitcher, KitchenSwitcherSkeletonPulse } from "./kitchen-switcher";
+import { KitchenSwitcher } from "./kitchen-switcher";
 import { NewKitchenDialog } from "@/modules/kitchen/ui/components/new-kitchen-dialog";
-import { useKitchens } from "@/modules/kitchen/hooks/queries/use-kitchens";
-import { useKitchenStore } from "@/modules/kitchen/store/kitchen-store"
+import { useManyKitchens } from "@/modules/kitchen/hooks/queries/use-many-kitchens";
 import { UpdateKitchenDialog } from "./update-kitchen-dialog";
 
 export function KitchenManager() {
   const [isNewDialogOpen, setIsNewDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const { data: kitchens, isLoading: kitchensLoading, isError: kitchensError } = useKitchens();
-  const { selectedKitchen, setSelectedKitchen } = useKitchenStore();
+  const { data: kitchens, isLoading: kitchensLoading, isError: kitchensError } = useManyKitchens();
 
   useEffect(() => {
-    if (kitchens && kitchens.length > 0 && !selectedKitchen) {
-      setSelectedKitchen(kitchens[0]);
+    if (!kitchens || kitchens.length === 0) return;
+
+    const isValidKitchen = kitchens.some(k => k.id === kitchenQs);
+
+    if (!kitchenQs || !isValidKitchen) {
+      setKitchenQs(kitchens[0].id);
     }
-  }, [kitchens, selectedKitchen, setSelectedKitchen]);
+  }, [kitchens, kitchenQs, setKitchenQs]);
 
   if (kitchensLoading || kitchensError) {
     return (
-      <KitchenSwitcherSkeletonPulse />
+      // <KitchenSwitcherSkeletonPulse />
+      <div>Loading...</div>
     );
   }
 
@@ -42,6 +45,8 @@ export function KitchenManager() {
     );
   }
 
+  const selectedKitchen = kitchens.find(k => k.id === kitchenQs)!;
+
   return (
     <>
       <NewKitchenDialog open={isNewDialogOpen} onOpenChange={setIsNewDialogOpen} />
@@ -49,7 +54,7 @@ export function KitchenManager() {
       <KitchenSwitcher 
         kitchens={kitchens}
         selectedKitchen={selectedKitchen}
-        onSelectKitchen={setSelectedKitchen}
+        onSelectKitchen={(k) => setKitchenQs(k.id)}
       />
       <div className="flex items-center justify-center gap-2">
         <Button onClick={() => setIsNewDialogOpen(true)}>

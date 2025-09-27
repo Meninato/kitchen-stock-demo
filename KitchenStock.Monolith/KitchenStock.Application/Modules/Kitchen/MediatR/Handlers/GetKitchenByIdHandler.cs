@@ -1,10 +1,11 @@
 ﻿using KitchenStock.Application.Modules.Kitchen.Abstractions;
 using KitchenStock.Application.Modules.Kitchen.MediatR.Queries;
 using KitchenStock.Application.Modules.Kitchen.Results;
+using MediatR;
 
 namespace KitchenStock.Application.Modules.Kitchen.MediatR.Handlers;
 
-public class GetKitchenByIdHandler
+public class GetKitchenByIdHandler : IRequestHandler<GetKitchenByIdQuery, KitchenResult>
 {
     private readonly IKitchenService _kitchenService;
 

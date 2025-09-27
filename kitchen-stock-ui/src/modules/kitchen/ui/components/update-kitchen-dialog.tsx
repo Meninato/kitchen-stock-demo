@@ -1,19 +1,22 @@
 "use client";
 
 import { ResponsiveDialog } from "@/components/responsive-dialog";
-import { FormUpdateKitchenDto } from "@/modules/kitchen/api/types";
+
+import { FormUpdateKitchenDto, Kitchen } from "@/modules/kitchen/api/types";
 import { UpdateKitchenForm } from "./update-kitchen-form";
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   kitchen: FormUpdateKitchenDto;
+  onKitchenUpdated?: (kitchen: Kitchen) => Promise<void>;
 };
 
 export const UpdateKitchenDialog = ({
   open,
   onOpenChange,
-  kitchen
+  kitchen,
+  onKitchenUpdated
 }: Props) => {
   return (
     <ResponsiveDialog
@@ -23,7 +26,10 @@ export const UpdateKitchenDialog = ({
       onOpenChange={onOpenChange}
     >
       <UpdateKitchenForm
-        onSuccess={() => onOpenChange(false)}
+        onSuccess={ async (k) => {
+          onOpenChange(false);
+          await onKitchenUpdated?.(k);
+        }}
         onCancel={() => onOpenChange(false)}
         kitchen={kitchen}
       />

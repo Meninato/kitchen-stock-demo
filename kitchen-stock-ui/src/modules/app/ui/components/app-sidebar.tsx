@@ -31,6 +31,7 @@ import { useAuthLogout } from "@/modules/auth/hooks/mutations/use-auth-logout";
 import { clearTokensAction } from "@/modules/auth/actions/clear-tokens-action";
 import { NewKitchenDialog } from "@/modules/kitchen/ui/components/new-kitchen-dialog";
 import { KitchenManager } from "@/modules/kitchen/ui/components/kitchen-manager";
+import { useKitchenStore } from "@/modules/kitchen/store/kitchen-store";
 
 export const AppSidebar = () => {
   const pathname = usePathname();
@@ -40,6 +41,8 @@ export const AppSidebar = () => {
 
   const endSession = async () => {
     await Promise.all([clearTokensAction(), logoutAsync()]);
+
+    useKitchenStore.persist.clearStorage();
 
     // HARD NAVIGATION RESET
     window.location.href = APP_ROUTES.AUTH.SIGN_IN;

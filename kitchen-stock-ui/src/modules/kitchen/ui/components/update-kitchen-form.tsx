@@ -5,13 +5,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 
 import { getErrorMessage } from "@/lib/api-client";
-import { FormUpdateKitchenDto, kitchenUpdateSchema } from "@/modules/kitchen/api/types";
+import { FormUpdateKitchenDto, Kitchen, kitchenUpdateSchema } from "@/modules/kitchen/api/types";
 import { useUpdateKitchen } from "@/modules/kitchen/hooks/mutations/use-update-kitchen";
-import { useKitchenQs } from "@/modules/kitchen/hooks/params/use-kitchen-qs";
 import { KitchenForm } from "./kitchen-form";
+import { useKitchenStore } from "@/modules/kitchen/store/kitchen-store";
 
 interface Props {
-  onSuccess?: () => void;
+  onSuccess?: (kitchen: Kitchen) => void;
   onCancel?: () => void;
   kitchen: FormUpdateKitchenDto;
 };
@@ -21,10 +21,10 @@ export const UpdateKitchenForm = ({
   onCancel,
   kitchen
 }: Props) => {
-  const [kitchenQs, setKitchenQs] = useKitchenQs();
+  const { selectedKitchen } = useKitchenStore();
   const { isPending, mutateAsync: updateKitchenAsync } = useUpdateKitchen({
-    onSuccess: () => {
-      onSuccess?.();
+    onSuccess: (data) => {
+      onSuccess?.(data);
     }
   });
 
@@ -38,8 +38,7 @@ export const UpdateKitchenForm = ({
 
   const handleSubmit = async (data: FormUpdateKitchenDto) => {
     try {
-      const updatedKitchen = await updateKitchenAsync({id: kitchenQs, data});
-      setKitchenQs(updatedKitchen.id);
+      await updateKitchenAsync({id: selectedKitchen!.id, data});
     } catch(err) {
       const message = getErrorMessage(err);
       toast.error(message)

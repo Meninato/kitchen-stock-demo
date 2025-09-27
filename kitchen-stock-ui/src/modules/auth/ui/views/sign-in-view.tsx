@@ -27,6 +27,7 @@ import { authLoginSchema, FormLoginDto } from "@/modules/auth/api/types";
 import { useAuthLogin } from "@/modules/auth/hooks/mutations/use-auth-login";
 
 import { APP_ROUTES } from "@/app-routes";
+import { useKitchenStore } from "@/modules/kitchen/store/kitchen-store";
 
 export const SignInView = () => {
   const router = useRouter();
@@ -41,11 +42,14 @@ export const SignInView = () => {
     },
   });
 
+  //TODO: check if there is a selected kitchen if there is just send to /app otherwise to /app/kitchen-selection
+
   const onSubmit = async (data: FormLoginDto) => {
     setError(null);
     
     try {
       await mutateAsync(data);
+      useKitchenStore.persist.clearStorage();
       router.push(APP_ROUTES.APP.HOME);
     } catch(err) {
       const message = getErrorMessage(err);

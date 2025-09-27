@@ -16,12 +16,8 @@ export default function KitchenInitializer({ children }: { children: React.React
   const { selectedKitchen, setSelectedKitchen } = useKitchenStore()
   const queryClient = useQueryClient();
 
-  const cachedKitchens = queryClient.getQueryData(kitchenQueryKeys.lists()) as Kitchen[] | undefined
+  const cachedKitchens = queryClient.getQueryData(kitchenQueryKeys.lists()) as Kitchen[] | undefined;
   
-  console.log("CACHED KITCHENS BEGIN", cachedKitchens);
-  console.log("CACHED KITCHENS BEGIN", !cachedKitchens);
-  console.log("CACHED KITCHENS BEGIN", !!cachedKitchens);
-
   // Only fetch kitchens if not in cache and we need them
   const { 
     data: kitchens, 
@@ -30,9 +26,9 @@ export default function KitchenInitializer({ children }: { children: React.React
     enabled: !cachedKitchens
   });
 
-  console.log("IS KITCHEN LOADING", isKitchensLoading);
-
   useEffect(() => {
+    if(isReady && selectedKitchen) return;
+
     console.log("SELECTED KITCHEN", selectedKitchen);
     console.log("CACHED KITCHENS", cachedKitchens);
 
@@ -71,7 +67,7 @@ export default function KitchenInitializer({ children }: { children: React.React
 
     // Default case - not ready yet
     setIsReady(false);
-  }, [pathname, selectedKitchen, setSelectedKitchen, cachedKitchens, kitchens]);
+  }, [pathname, selectedKitchen, setSelectedKitchen, cachedKitchens, kitchens, isReady]);
 
   // Show loader while waiting for initialization or API calls
   if (!isReady || isKitchensLoading) {

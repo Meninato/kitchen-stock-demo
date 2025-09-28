@@ -32,7 +32,7 @@ export const sidebarNav: NavSection[] = [
     items: [
       {
         title: "Igredientes",
-        href: "#",
+        href: APP_ROUTES.APP.INGREDIENTS,
       },
       {
         title: "Receitas",

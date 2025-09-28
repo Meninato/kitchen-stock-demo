@@ -1,78 +1,115 @@
 'use client'
 
 import { useEffect, useState } from "react"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { useQueryClient } from "@tanstack/react-query"
 
 import { useKitchenStore } from "@/modules/kitchen/store/kitchen-store"
 import { Loader } from "@/components/loader"
 import { Kitchen } from "@/modules/kitchen/api/types"
 import { useManyKitchens } from "@/modules/kitchen/hooks/queries/use-many-kitchens"
-import { kitchenQueryKeys } from "../../hooks/queries/kitchen-query-keys"
+import { kitchenQueryKeys } from "@/modules/kitchen/hooks/queries/kitchen-query-keys"
+import { APP_ROUTES } from "@/app-routes"
 
 export default function KitchenInitializer({ children }: { children: React.ReactNode }) {
-  const [isReady, setIsReady] = useState(false)
+  const [initState, setInitState] = useState<'loading' | 'ready' | 'redirect'>('loading')
   const pathname = usePathname()
+  const router = useRouter()
   const { selectedKitchen, setSelectedKitchen } = useKitchenStore()
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
 
-  const cachedKitchens = queryClient.getQueryData(kitchenQueryKeys.lists()) as Kitchen[] | undefined;
-  
-  // Only fetch kitchens if not in cache and we need them
+  const cachedKitchens = queryClient.getQueryData(kitchenQueryKeys.lists()) as Kitchen[] | undefined
+
+  // Fetch kitchens se não estão no cache
   const { 
     data: kitchens, 
-    isLoading: isKitchensLoading 
+    isLoading: isKitchensLoading,
+    isError: isKitchensError
   } = useManyKitchens({
     enabled: !cachedKitchens
-  });
+  })
 
   useEffect(() => {
-    if(isReady && selectedKitchen) return;
 
-    console.log("SELECTED KITCHEN", selectedKitchen);
-    console.log("CACHED KITCHENS", cachedKitchens);
+    // Determina as kitchens disponíveis (cache ou API)
+    const availableKitchens = cachedKitchens || kitchens || [];
 
-    // Case 1: Coming from kitchen-selection - both store and cache should be ready
-    if (selectedKitchen && cachedKitchens) {
-      console.log("Already initialized with cache - ready!")
-      setIsReady(true);
-      return;
+    console.log('Initializer state:', {
+      pathname,
+      selectedKitchen: selectedKitchen?.id,
+      availableKitchens: availableKitchens.length,
+      isKitchensLoading,
+      cachedKitchens: !!cachedKitchens
+    })
+
+    // Se já está pronto, não faz nada
+    if (initState === 'ready') return
+
+    // Se está na página de seleção de kitchen, deixa passar
+    if (pathname === APP_ROUTES.APP.KITCHEN_SELECTION) {
+      setInitState('ready')
+      return
     }
 
-    // Case 2: selectedKitchen exists but no cached kitchens data
-    if (selectedKitchen && !cachedKitchens) {
-      console.log("Store ready but cache empty - waiting for cache...")
-      setIsReady(false);
-      return;
+    // Se ainda está carregando dados, aguarda
+    if (isKitchensLoading && !cachedKitchens) {
+      setInitState('loading')
+      return
     }
 
-    // Case 3: no selectedKitchen - need to initialize store
-    if (!selectedKitchen) {
-      console.log("Initializing store from URL...")
-
-      // Try to find kitchen in cache first
-      if (cachedKitchens && cachedKitchens.length > 0) {
-        setSelectedKitchen(cachedKitchens[0]);
-        setIsReady(true);
-        return;
-      }
-
-      // If not in cache, wait for API call or set partial kitchen
-      if (kitchens) {
-        setSelectedKitchen(kitchens[0]);
-        setIsReady(true);
-        return;
-      }
+    // Se deu erro ao carregar e não tem cache, redireciona
+    if (isKitchensError && !cachedKitchens) {
+      console.log('Error loading kitchens, redirecting...')
+      setInitState('redirect')
+      router.replace(APP_ROUTES.APP.KITCHEN_SELECTION)
+      return
     }
 
-    // Default case - not ready yet
-    setIsReady(false);
-  }, [pathname, selectedKitchen, setSelectedKitchen, cachedKitchens, kitchens, isReady]);
+    // Se não tem kitchens disponíveis, redireciona para criação
+    if (availableKitchens.length === 0) {
+      console.log('No kitchens available, redirecting to kitchen-selection...')
+      setInitState('redirect')
+      router.replace(APP_ROUTES.APP.KITCHEN_SELECTION)
+      return
+    }
 
-  // Show loader while waiting for initialization or API calls
-  if (!isReady || isKitchensLoading) {
-    return <Loader texts={["wtf"]} />;
+    // Se tem kitchen selecionada, está pronto
+    if (selectedKitchen) {
+      console.log('Kitchen already selected, ready!')
+      setInitState('ready')
+      return
+    }
+
+    // Se não tem kitchen selecionada mas tem kitchens disponíveis, seleciona a primeira
+    if (availableKitchens.length > 0) {
+      console.log('Auto-selecting first available kitchen...')
+      setSelectedKitchen(availableKitchens[0])
+      setInitState('ready')
+      return
+    }
+
+    // Fallback - se chegou aqui, algo deu errado
+    console.log('Fallback: redirecting to kitchen-selection...')
+    setInitState('redirect')
+    router.replace(APP_ROUTES.APP.KITCHEN_SELECTION)
+
+  }, [
+    pathname, 
+    selectedKitchen, 
+    isKitchensLoading, 
+    isKitchensError,
+    cachedKitchens,
+    initState,
+    kitchens,
+    setSelectedKitchen, 
+    router
+  ])
+
+  // Se está redirecionando ou carregando, mostra loader
+  if (initState === 'loading' || initState === 'redirect') {
+    return <Loader />
   }
 
-  return <>{children}</>;
+  // Se chegou aqui, está pronto para renderizar
+  return <>{children}</>
 }

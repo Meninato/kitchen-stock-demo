@@ -1,4 +1,4 @@
-import { KitchenSelectionView } from "./kitchen-selection-view";
+import { KitchenSelectionView } from "@/modules/kitchen-selection/ui/views/kitchen-selection-view";
 
 export default function KitchenSelectionPage() {
   return (

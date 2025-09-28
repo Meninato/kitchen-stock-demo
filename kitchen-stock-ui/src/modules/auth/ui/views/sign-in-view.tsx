@@ -33,6 +33,7 @@ export const SignInView = () => {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const { isPending, mutateAsync } = useAuthLogin();
+  const { hasSelectedKitchen } = useKitchenStore();
 
   const form = useForm<FormLoginDto>({
     resolver: zodResolver(authLoginSchema),
@@ -50,7 +51,12 @@ export const SignInView = () => {
     try {
       await mutateAsync(data);
       useKitchenStore.persist.clearStorage();
-      router.push(APP_ROUTES.APP.HOME);
+
+      if(hasSelectedKitchen()) {
+        router.push(APP_ROUTES.APP.HOME);
+      } {
+        router.push(APP_ROUTES.APP.KITCHEN_SELECTION);
+      }
     } catch(err) {
       const message = getErrorMessage(err);
       setError(message);

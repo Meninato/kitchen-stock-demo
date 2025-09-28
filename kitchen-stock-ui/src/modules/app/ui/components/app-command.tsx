@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { Dispatch, SetStateAction, useState } from "react";
+import { keepPreviousData } from "@tanstack/react-query";
 
 import { 
   CommandResponsiveDialog, 
@@ -11,34 +12,39 @@ import {
   CommandGroup,
   CommandEmpty
 } from "@/components/ui/command";
+
 import { useIngredients } from "@/modules/ingredients/hooks/queries/use-ingredients";
-import { useKitchenQs } from "@/modules/kitchen/hooks/params/use-kitchen-qs";
+import { useKitchenStore } from "@/modules/kitchen/store/kitchen-store";
+import { useDebounce } from "@/hooks/use-debounce";
 
 interface Props {
   open: boolean;
   setOpen: Dispatch<SetStateAction<boolean>>;
 };
 
-interface MockupData {
-  id: string;
-  name: string;
-}
-
 export const AppCommand = ({ open, setOpen }: Props) => {
   const router = useRouter();
   const [search, setSearch] = useState("");
-  const [kitchenQs] = useKitchenQs();
-  // const {} = useIngredients( selectedKitchen)
+  const debouncedSearch = useDebounce(search, 300);
+  const { selectedKitchen } = useKitchenStore();
 
-  const ingredients: MockupData[] = []; // empty
-  // const recipes: MockupData[] = []; // empty
-  // const suppliers: MockupData[] = [
-  //   { id: "a", name: "John Doe Varejão" },
-  //   { id: "b", name: "Gisele Hortaliças" }
-  // ];
+  const { data: ingredients } = useIngredients({
+    kitchenId: selectedKitchen!.id,
+    config: {
+      filter: {
+        searchTerm: debouncedSearch
+      },
+      pagination: {
+        page: 1,
+        pageSize: 100,
+      }
+    },
+  }, {
+    placeholderData: keepPreviousData
+  });
 
   return (
-    <CommandResponsiveDialog shouldFilter={true} open={open} onOpenChange={setOpen}>
+    <CommandResponsiveDialog open={open} onOpenChange={setOpen}>
       <CommandInput
         placeholder="O que você procura?"
         value={search}
@@ -51,10 +57,10 @@ export const AppCommand = ({ open, setOpen }: Props) => {
               Nenhum ingrediente
             </span>
           </CommandEmpty>
-          {ingredients.map((ingredient) => (
+          {ingredients?.data.map((ingredient) => (
             <CommandItem
               onSelect={() => {
-                // router.push();
+                router.push(`/app/ingredients/${ingredient.id}`);
                 setOpen(false);
               }}
               key={ingredient.id}
@@ -63,42 +69,6 @@ export const AppCommand = ({ open, setOpen }: Props) => {
             </CommandItem>
           ))}
         </CommandGroup>
-        {/* <CommandGroup heading="Receitas">
-          <CommandEmpty>
-            <span className="text-muted-foreground text-sm">
-              Nenhuma receita
-            </span>
-          </CommandEmpty>
-          {recipes.map((recipe) => (
-            <CommandItem
-              onSelect={() => {
-                // router.push();
-                setOpen(false);
-              }}
-              key={recipe.id}
-            >
-              {recipe.name}
-            </CommandItem>
-          ))}
-        </CommandGroup> */}
-        {/* <CommandGroup heading="Fornecedores">
-          <CommandEmpty>
-            <span className="text-muted-foreground text-sm">
-              Nenhum fornecedor
-            </span>
-          </CommandEmpty>
-          {suppliers.map((supplier) => (
-            <CommandItem
-              onSelect={() => {
-                // router.push();
-                setOpen(false);
-              }}
-              key={supplier.id}
-            >
-              {supplier.name}
-            </CommandItem>
-          ))}
-        </CommandGroup> */}
       </CommandList>
     </CommandResponsiveDialog>
   );

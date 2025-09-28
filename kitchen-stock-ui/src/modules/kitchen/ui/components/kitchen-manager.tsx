@@ -104,7 +104,7 @@ export function KitchenManager() {
           <EditIcon />
         </Button>
         
-        <Button disabled={!selectedKitchen}>
+        <Button disabled={true}>
           <EyeIcon />
         </Button>
       </div>

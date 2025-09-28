@@ -1,4 +1,8 @@
-import { apiClient, ApiPaginationRequest } from "@/lib/api-client";
+import {
+  apiClient,
+  ApiPaginationRequest,
+  WithPagination,
+} from "@/lib/api-client";
 import { Ingredient } from "./types";
 
 export interface IngredientFilters {
@@ -10,7 +14,7 @@ export const INGREDIENTS_API_ROUTES = {
   INGREDIENTS: "/ingredients",
 };
 
-interface GetIngredientsParams {
+export interface GetIngredientsParams {
   kitchenId: string;
   config?: {
     pagination?: ApiPaginationRequest;
@@ -19,8 +23,14 @@ interface GetIngredientsParams {
 }
 
 export const ingredientEndpoints = {
-  getIngredients: async (data: GetIngredientsParams): Promise<Ingredient[]> => {
-    const params: Record<string, unknown> = {};
+  getIngredients: async (
+    data: GetIngredientsParams
+  ): Promise<WithPagination<Ingredient[]>> => {
+    const params: GetIngredientsParams = {
+      kitchenId: data.kitchenId,
+      ...(data.config?.pagination ?? {}),
+      ...(data.config?.filter ?? {}),
+    };
 
     if (data.config?.pagination) {
       Object.assign(params, data.config.pagination);
@@ -36,6 +46,13 @@ export const ingredientEndpoints = {
         params,
       }
     );
-    return response.data;
+
+    if (!response.pagination)
+      throw new Error("Missing pagination for ingredients");
+
+    return {
+      data: response.data,
+      pagination: response.pagination,
+    };
   },
 };

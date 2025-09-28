@@ -1,8 +1,9 @@
 "use client"
 
 import { useEffect, useState } from "react";
-import { PlusIcon, EyeIcon, EditIcon } from "lucide-react";
+import { PlusIcon, EditIcon } from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -15,6 +16,8 @@ import { useManyKitchens } from "@/modules/kitchen/hooks/queries/use-many-kitche
 import { Loader } from "@/components/loader";
 import { APP_ROUTES } from "@/app-routes";
 import { useKitchenStore } from "@/modules/kitchen/store/kitchen-store";
+import { Kitchen } from "@/modules/kitchen/api/types";
+import { kitchenQueryKeys } from "@/modules/kitchen/hooks/queries/kitchen-query-keys";
 
 export const KitchenSelectionView = () => {
   const [isNewDialogOpen, setIsNewDialogOpen] = useState(false);
@@ -23,6 +26,7 @@ export const KitchenSelectionView = () => {
   const { selectedKitchen, setSelectedKitchen } = useKitchenStore();
   const searchParams = useSearchParams();
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (!kitchens || kitchens.length === 0) return;
@@ -70,10 +74,15 @@ export const KitchenSelectionView = () => {
     router.push(destinationPath);
   };
 
+  const handleOnKitchenChange = async (k: Kitchen) => {
+    setSelectedKitchen(k);
+    await queryClient.invalidateQueries({ queryKey: kitchenQueryKeys.lists() });
+  }
+
   return (
     <>
-      <NewKitchenDialog open={isNewDialogOpen} onOpenChange={setIsNewDialogOpen} />
-      <UpdateKitchenDialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen} kitchen={selectedKitchen!} />
+      <NewKitchenDialog open={isNewDialogOpen} onOpenChange={setIsNewDialogOpen} onKitchenCreated={handleOnKitchenChange} />
+      <UpdateKitchenDialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen} onKitchenUpdated={handleOnKitchenChange} kitchen={selectedKitchen!} />
 
       <div className="flex items-center justify-center h-screen">
         <Card className="w-full max-w-lg shadow-lg rounded-2xl">
@@ -107,9 +116,6 @@ export const KitchenSelectionView = () => {
                   </Button>
                   <Button onClick={() => setIsEditDialogOpen(true)} disabled={!selectedKitchen}>
                     <EditIcon className="h-4 w-4" />
-                  </Button>
-                  <Button variant="secondary" disabled={!selectedKitchen}>
-                    <EyeIcon className="h-4 w-4" />
                   </Button>
                 </div>
               </div>

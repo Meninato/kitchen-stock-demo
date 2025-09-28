@@ -15,6 +15,11 @@ export interface ApiPaginationRequest {
   sortDescending?: boolean;
 }
 
+export interface WithPagination<T = unknown> {
+  data: T;
+  pagination: ApiPaginationResponse;
+}
+
 export interface ApiPaginationResponse {
   page: number;
   pageSize: number;

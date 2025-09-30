@@ -396,4 +396,6 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
-Omnix.Ews/Omnix.Ews.Application/wwwroot
+
+# Custom
+**/appsettings.Development.json

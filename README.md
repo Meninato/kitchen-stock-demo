@@ -12,7 +12,10 @@ While not fully complete, it covers a strong foundation and essential components
 
 ## ✅ Development Status
 
-**Completed Features**
+**API:** All endpoints are implemented.
+
+**Completed UI Features**
+- ✅ Login/Register - Complete
 - ✅ Kitchens - Complete
 - ⏳ Ingredients - Almost complete
 
@@ -113,5 +116,6 @@ docker exec -it kitchen-vault vault operator init
 
 Open browser: http://localhost:8200  
 Use your unseal keys and root token to access
+
 
 

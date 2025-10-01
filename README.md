@@ -117,5 +117,76 @@ docker exec -it kitchen-vault vault operator init
 Open browser: http://localhost:8200  
 Use your unseal keys and root token to access
 
+---
 
+#### 4. Create Vault Secrets
 
+Secret 1: Database Connection
+- Path: kitchen/db/connection
+- Format: Key-Value
+- Entry:
+```bash
+key: value
+value: Host=localhost;Port=5432;Database=devdb;Username=devuser;Password=devpass;Pooling=true;
+```
+Secret 2: JWT Configuration
+- Path: kitchen/jwt
+- Format: JSON (mark as JSON entry)
+- Entry
+```bash
+{
+  "audience": "kitchen-stock",
+  "expires_in_seconds": 3600,
+  "issuer": "kitchen-stock",
+  "secret": "e87d32f00deb933b5bbdc726b90e3501"
+}
+```
+
+---
+
+#### 5. Configure Application Settings
+
+Navigate to `KitchenStock.Api/appsettings.json` and add:
+```bash
+{
+  "KitchenStock": {
+    "VaultSecretPaths": {
+      "Database": {
+        "ConnectionString": "kitchen/db/connection"
+      },
+      "JwtToken": {
+        "Config": "kitchen/jwt"
+      }
+    }
+  },
+  "Vault": {
+    "Url": "http://localhost:8200",
+    "Token": "YOUR_VAULT_ROOT_TOKEN_HERE"
+  }
+}
+```
+⚠️ Don't forget to replace `YOUR_VAULT_ROOT_TOKEN_HERE` with your actual Vault token.
+
+---
+
+#### 6. Run the Application
+
+- Open the solution file (.sln) in Visual Studio
+- Run the project
+
+The application will automatically:
+- Create database tables
+- Seed demo data
+
+## 📚 Learning Resources
+
+This project demonstrates:
+
+- ✅ Clean Architecture principles
+- ✅ CQRS pattern with MediatR
+- ✅ Repository pattern implementation
+- ✅ Result pattern for error handling
+- ✅ Secure secrets management with Vault
+- ✅ JWT authentication with refresh tokens
+- ✅ Modern React with TypeScript
+- ✅ API client with automatic retry logic
